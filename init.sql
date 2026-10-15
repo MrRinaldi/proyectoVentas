@@ -44,6 +44,7 @@ CREATE TABLE products (
     price DECIMAL(10,2) NOT NULL,
     image VARCHAR(255),
     image_medium VARCHAR(255),
+    product_type VARCHAR(50),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,

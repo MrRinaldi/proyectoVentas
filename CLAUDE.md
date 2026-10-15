@@ -34,9 +34,16 @@ se hicieron y sus resultados, qué se revisó de seguridad, dependencias nuevas 
 
 ## Problemas conocidos (análisis del 2026-10-15, pendientes de corregir)
 Ya corregidos: `.env` versionado, registro con rol del cliente, pedidos sin comprobar la tienda,
-`VITE_API_URL` indefinida en Docker. Pendientes:
-1. `updateProduct` usa `image_medium` sin definir → editar productos siempre falla.
-2. `createProduct` inserta `product_type`, columna que no existe en `init.sql`.
-3. Varias pantallas usan `http://localhost:3001` escrito a mano en vez de `VITE_API_URL`.
-4. `node_modules/` de la raíz versionado (2068 archivos) y `package.json` raíz con una dependencia sin uso.
-5. El historial de Git conserva el `backend/.env` antiguo (la contraseña debe cambiarse).
+`VITE_API_URL` indefinida en Docker, crear/editar productos (columna `product_type`, ver `scripts/migrations`).
+Pendientes:
+1. Varias pantallas usan `http://localhost:3001` escrito a mano en vez de `VITE_API_URL`.
+2. `node_modules/` de la raíz versionado (2068 archivos) y `package.json` raíz con una dependencia sin uso.
+3. El historial de Git conserva el `backend/.env` antiguo (la contraseña debe cambiarse).
+4. Abrir o recargar `/:slug/products` u `/:slug/orders` manda al login aunque haya sesión
+   (la página comprueba `user` antes de que `AuthContext` termine de cargarlo).
+5. En gestión de productos, el mensaje "Producto creado/actualizado" no se ve (`resetForm` lo borra).
+6. Las imágenes de logos y productos de `init.sql` no existen en el proyecto.
+
+## Pruebas
+No hay pruebas automáticas en el repo. Para verificar en local: `docker compose up -d` y probar la API
+con los usuarios de prueba del README (incluir siempre el caso "usuario de otra tienda").

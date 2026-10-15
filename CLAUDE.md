@@ -38,7 +38,8 @@ Ya corregidos: `.env` versionado, registro con rol del cliente, pedidos sin comp
 Pendientes:
 1. Varias pantallas usan `http://localhost:3001` escrito a mano en vez de `VITE_API_URL`.
 2. `node_modules/` de la raíz versionado (2068 archivos) y `package.json` raíz con una dependencia sin uso.
-3. El historial de Git conserva el `backend/.env` antiguo (la contraseña debe cambiarse).
+3. **Antes de salir de local / producción:** el historial de Git conserva el `backend/.env` antiguo;
+   cambiar esa contraseña donde se use y no reutilizarla. Pospuesto a propósito mientras se prueba en local.
 4. Abrir o recargar `/:slug/products` u `/:slug/orders` manda al login aunque haya sesión
    (la página comprueba `user` antes de que `AuthContext` termine de cargarlo).
 5. En gestión de productos, el mensaje "Producto creado/actualizado" no se ve (`resetForm` lo borra).

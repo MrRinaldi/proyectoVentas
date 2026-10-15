@@ -1,5 +1,6 @@
 import { useContext, useState } from "react";
 import { CartContext } from "../context/CartContext";
+import { getImageUrl, showPlaceholderOnError } from "../utils/images";
 
 // Función para obtener ícono según tipo de producto
 function getProductIcon(productType) {
@@ -30,11 +31,7 @@ function BurgerProductCard({ product }) {
   const [quantity, setQuantity] = useState(1);
   const [meatCount, setMeatCount] = useState(1);
 
-  const imageUrl = product.image_medium
-    ? `${import.meta.env.VITE_API_URL}${product.image_medium}`
-    : product.image
-      ? `${import.meta.env.VITE_API_URL}${product.image}`
-      : `${import.meta.env.VITE_API_URL}/images/burger.jpg`;
+  const imageUrl = getImageUrl(product.image_medium || product.image);
 
   const handleAddToCart = () => {
     const itemWithOptions = {
@@ -53,7 +50,8 @@ function BurgerProductCard({ product }) {
       <div className="relative overflow-hidden h-56">
         <img 
           src={imageUrl} 
-          alt={product.name} 
+          alt={product.name}
+          onError={showPlaceholderOnError}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
         />
         

@@ -35,15 +35,14 @@ se hicieron y sus resultados, qué se revisó de seguridad, dependencias nuevas 
 ## Problemas conocidos (análisis del 2026-10-15, pendientes de corregir)
 Ya corregidos: `.env` versionado, registro con rol del cliente, pedidos sin comprobar la tienda,
 `VITE_API_URL` indefinida en Docker, crear/editar productos (columna `product_type`, ver `scripts/migrations`),
-URLs `localhost:3001` escritas a mano, login al recargar páginas protegidas, mensaje de producto.
+URLs `localhost:3001` escritas a mano, login al recargar páginas protegidas, mensaje de producto,
+rutas de imágenes (migración 002).
 Limpieza hecha: `node_modules` y `package.json` de la raíz, componentes y scripts sin uso.
 `backend/qrys db/` son scripts de datos de trabajo de Fran (no código de la app): no borrar.
 Pendientes:
 1. **Antes de salir de local / producción:** el historial de Git conserva el `backend/.env` antiguo;
    cambiar esa contraseña donde se use y no reutilizarla. Pospuesto a propósito mientras se prueba en local.
-2. Las imágenes de logos y productos de `init.sql` no existen, y el backend las sirve en `/api/images`
-   mientras la BD guarda rutas `/images/...`.
-3. `npx eslint` marca `react-refresh/only-export-components` en `AuthContext.jsx` (exporta `useAuth`); no afecta al funcionamiento.
+2. `npx eslint` marca `react-refresh/only-export-components` en `AuthContext.jsx` (exporta `useAuth`); no afecta al funcionamiento.
 
 ## Sesión en el frontend
 `AuthContext` lee `user` de `localStorage` al crearse (sin estado `loading`). Las páginas protegidas que
@@ -52,3 +51,8 @@ reciben 401 de la API llaman a `logout()`, y su efecto las redirige al login.
 ## Pruebas
 No hay pruebas automáticas en el repo. Para verificar en local: `docker compose up -d` y probar la API
 con los usuarios de prueba del README (incluir siempre el caso "usuario de otra tienda").
+
+## Imágenes
+El backend sirve `backend/images/` en `/api/images/`; la BD guarda rutas `/api/images/...` (o una URL `https://`).
+En el frontend, usar siempre `getImageUrl()` y `onError={showPlaceholderOnError}` de `src/utils/images.js`.
+Casi todas las imágenes de los datos de ejemplo no existen como archivo: se ve `frontend/public/images/placeholder.svg`.

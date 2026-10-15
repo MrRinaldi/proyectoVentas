@@ -29,6 +29,7 @@ Si tu base de datos se creó antes de un cambio de esquema, aplica los scripts d
 en orden, una sola vez, con los contenedores en marcha. Por ejemplo, en PowerShell:
 ```
 Get-Content scripts/migrations/001-product-type.sql | docker exec -i mysql_db mysql -uroot -proot ventas
+Get-Content scripts/migrations/002-image-paths.sql | docker exec -i mysql_db mysql -uroot -proot ventas
 ```
 
 ## Persistencia de Base de Datos

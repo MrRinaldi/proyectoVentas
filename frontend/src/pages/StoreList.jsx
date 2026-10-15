@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { getImageUrl, showPlaceholderOnError } from "../utils/images";
 
 function StoreList() {
   const [businesses, setBusinesses] = useState([]);
@@ -46,8 +47,9 @@ function StoreList() {
               <div className="flex items-center space-x-4">
                 {business.logo && (
                   <img
-                    src={business.logo}
+                    src={getImageUrl(business.logo)}
                     alt={business.name}
+                    onError={showPlaceholderOnError}
                     className="w-16 h-16 rounded-full object-cover"
                   />
                 )}

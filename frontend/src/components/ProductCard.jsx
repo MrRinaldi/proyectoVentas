@@ -1,5 +1,6 @@
 import { useContext, useState } from "react";
 import { CartContext } from "../context/CartContext";
+import { getImageUrl, showPlaceholderOnError } from "../utils/images";
 
 // Función para obtener ícono según tipo de producto
 function getProductIcon(productType) {
@@ -31,8 +32,7 @@ function ProductCard({ product }) {
   const [quantity, setQuantity] = useState(1);
   const [meatCount, setMeatCount] = useState(1);
 
-  // Construir la URL completa de la imagen desde el backend
-  const imageUrl = product.image_medium ? `${import.meta.env.VITE_API_URL}${product.image_medium}` : '/placeholder-image.jpg';
+  const imageUrl = getImageUrl(product.image_medium || product.image);
 
   const handleAddToCart = () => {
     const itemWithOptions = {
@@ -48,7 +48,7 @@ function ProductCard({ product }) {
   return (
     <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition p-4 flex flex-col justify-between">
       
-      <img src={imageUrl} alt={product.name} className="w-full h-48 object-cover rounded-t-xl mb-4" />
+      <img src={imageUrl} alt={product.name} onError={showPlaceholderOnError} className="w-full h-48 object-cover rounded-t-xl mb-4" />
 
       <div>
         <div className="flex items-center gap-2 mb-1">

@@ -2,59 +2,6 @@ const pool = require("../config/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-exports.register = async (req, res) => {
-  try {
-    const { businessSlug, email, password, role = 'customer' } = req.body;
-
-    if (!businessSlug || !email || !password) {
-      return res.status(400).json({ message: "Faltan datos" });
-    }
-
-    // Verificar que la tienda existe
-    const [businesses] = await pool.query(
-      "SELECT id, name FROM businesses WHERE slug = ?",
-      [businessSlug]
-    );
-
-    if (businesses.length === 0) {
-      return res.status(404).json({ message: "Tienda no encontrada" });
-    }
-
-    const business = businesses[0];
-
-    // Verificar que no exista ya un usuario con ese email en esta tienda
-    const [existingUsers] = await pool.query(
-      "SELECT id FROM users WHERE email = ? AND business_id = ?",
-      [email, business.id]
-    );
-
-    if (existingUsers.length > 0) {
-      return res.status(400).json({ message: "Ya existe un usuario con este email en esta tienda" });
-    }
-
-    // Encriptar contraseña
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Crear usuario
-    await pool.query(
-      "INSERT INTO users (business_id, email, password, role) VALUES (?, ?, ?, ?)",
-      [business.id, email, hashedPassword, role]
-    );
-
-    res.status(201).json({
-      message: "Usuario registrado correctamente",
-      business: {
-        name: business.name,
-        slug: businessSlug
-      }
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error en el registro" });
-  }
-};
-
 exports.createBusiness = async (req, res) => {
   try {
     const { businessName, email, password, whatsappNumber, phone } = req.body;
@@ -120,7 +67,7 @@ exports.login = async (req, res) => {
     );
 
     if (users.length === 0) {
-      return res.status(400).json({ message: "Usuario no encontrado" });
+      return res.status(401).json({ message: "Email o contraseña incorrectos" });
     }
 
     const user = users[0];
@@ -128,7 +75,7 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({ message: "Contraseña incorrecta" });
+      return res.status(401).json({ message: "Email o contraseña incorrectos" });
     }
 
     const token = jwt.sign(

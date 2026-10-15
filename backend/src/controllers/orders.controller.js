@@ -17,6 +17,11 @@ exports.getOrders = async (req, res) => {
 
     const businessId = businesses[0].id;
 
+    // Un dueño solo puede ver y modificar los pedidos de su propia tienda.
+    if (businessId !== req.user.businessId) {
+      return res.status(403).json({ message: "Acceso denegado." });
+    }
+
     // Obtener todas las órdenes del negocio con sus items
     const [orders] = await pool.query(`
       SELECT
@@ -73,6 +78,11 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     const businessId = businesses[0].id;
+
+    // Un dueño solo puede ver y modificar los pedidos de su propia tienda.
+    if (businessId !== req.user.businessId) {
+      return res.status(403).json({ message: "Acceso denegado." });
+    }
 
     // Verificar que la orden pertenece al negocio
     const [orders] = await pool.query(

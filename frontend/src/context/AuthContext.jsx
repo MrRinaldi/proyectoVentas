@@ -55,28 +55,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (businessSlug, email, password, role = 'customer') => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ businessSlug, email, password, role }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en el registro');
-      }
-
-      return { success: true, message: data.message, business: data.business };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
-  };
-
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -90,7 +68,6 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     login,
-    register,
     logout,
     isOwner,
     loading,

@@ -4,6 +4,12 @@ const pool = require("./src/config/db");
 
 const PORT = process.env.PORT || 3001;
 
+// Sin secreto, jwt.sign/verify fallarían en cada petición; mejor no arrancar.
+if (!process.env.JWT_SECRET) {
+  console.error("❌ Falta JWT_SECRET. Defínelo en .env (ver .env.example).");
+  process.exit(1);
+}
+
 async function waitForDB() {
   while (true) {
     try {

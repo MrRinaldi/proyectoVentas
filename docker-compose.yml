@@ -16,6 +16,7 @@ services:
       - DB_PASSWORD=root
       - DB_NAME=ventas
       - PORT=3001
+      - JWT_SECRET=${JWT_SECRET:?Define JWT_SECRET en el archivo .env de la raiz (ver .env.example)}
     depends_on:
       - db
 

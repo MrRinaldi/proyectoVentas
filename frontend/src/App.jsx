@@ -4,7 +4,6 @@ import Store from "./pages/Store";
 import StoreBurger from "./pages/StoreBurger";
 import Orders from "./pages/Orders";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import CreateBusiness from "./pages/CreateBusiness";
 import Home from "./pages/Home";
 import StoreList from "./pages/StoreList";
@@ -17,7 +16,7 @@ function App() {
         <Route path="/" element={<StoreList />} />
         <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/register" element={<CreateBusiness />} />
         <Route path="/create-business" element={<CreateBusiness />} />
         <Route path="/:slug" element={<Store />} />
         <Route path="/:slug/burger" element={<StoreBurger />} />

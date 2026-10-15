@@ -34,16 +34,20 @@ se hicieron y sus resultados, qué se revisó de seguridad, dependencias nuevas 
 
 ## Problemas conocidos (análisis del 2026-10-15, pendientes de corregir)
 Ya corregidos: `.env` versionado, registro con rol del cliente, pedidos sin comprobar la tienda,
-`VITE_API_URL` indefinida en Docker, crear/editar productos (columna `product_type`, ver `scripts/migrations`).
+`VITE_API_URL` indefinida en Docker, crear/editar productos (columna `product_type`, ver `scripts/migrations`),
+URLs `localhost:3001` escritas a mano, login al recargar páginas protegidas, mensaje de producto.
 Pendientes:
-1. Varias pantallas usan `http://localhost:3001` escrito a mano en vez de `VITE_API_URL`.
-2. `node_modules/` de la raíz versionado (2068 archivos) y `package.json` raíz con una dependencia sin uso.
-3. **Antes de salir de local / producción:** el historial de Git conserva el `backend/.env` antiguo;
+1. `node_modules/` de la raíz versionado (2068 archivos) y `package.json` raíz con una dependencia sin uso.
+2. **Antes de salir de local / producción:** el historial de Git conserva el `backend/.env` antiguo;
    cambiar esa contraseña donde se use y no reutilizarla. Pospuesto a propósito mientras se prueba en local.
-4. Abrir o recargar `/:slug/products` u `/:slug/orders` manda al login aunque haya sesión
-   (la página comprueba `user` antes de que `AuthContext` termine de cargarlo).
-5. En gestión de productos, el mensaje "Producto creado/actualizado" no se ve (`resetForm` lo borra).
-6. Las imágenes de logos y productos de `init.sql` no existen en el proyecto.
+3. Las imágenes de logos y productos de `init.sql` no existen, y el backend las sirve en `/api/images`
+   mientras la BD guarda rutas `/images/...`.
+4. `npx eslint` marca `react-refresh/only-export-components` en `AuthContext.jsx` (exporta `useAuth`); no afecta al funcionamiento.
+5. `HomeNew.jsx`, `Button.jsx` y `Sidebar.jsx` no se usan.
+
+## Sesión en el frontend
+`AuthContext` lee `user` de `localStorage` al crearse (sin estado `loading`). Las páginas protegidas que
+reciben 401 de la API llaman a `logout()`, y su efecto las redirige al login.
 
 ## Pruebas
 No hay pruebas automáticas en el repo. Para verificar en local: `docker compose up -d` y probar la API

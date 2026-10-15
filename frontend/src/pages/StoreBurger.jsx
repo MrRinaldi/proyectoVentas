@@ -15,7 +15,7 @@ function StoreBurger() {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/store/${slug}`)
+    fetch(`${import.meta.env.VITE_API_URL}/api/store/${slug}`)
       .then(res => res.json())
       .then(data => setStore(data));
   }, [slug]);

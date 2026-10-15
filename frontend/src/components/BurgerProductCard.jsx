@@ -31,10 +31,10 @@ function BurgerProductCard({ product }) {
   const [meatCount, setMeatCount] = useState(1);
 
   const imageUrl = product.image_medium
-    ? `http://localhost:3001${product.image_medium}`
+    ? `${import.meta.env.VITE_API_URL}${product.image_medium}`
     : product.image
-      ? `http://localhost:3001${product.image}`
-      : 'http://localhost:3001/images/burger.jpg';
+      ? `${import.meta.env.VITE_API_URL}${product.image}`
+      : `${import.meta.env.VITE_API_URL}/images/burger.jpg`;
 
   const handleAddToCart = () => {
     const itemWithOptions = {

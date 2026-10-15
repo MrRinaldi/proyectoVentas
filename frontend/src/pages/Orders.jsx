@@ -7,7 +7,7 @@ import StoreHeader from "../components/StoreHeader";
 function Orders() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { user, isOwner } = useAuth();
+  const { user, isOwner, logout } = useAuth();
   const [store, setStore] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,33 +25,41 @@ function Orders() {
     }
 
     // Obtener datos de la tienda
-    fetch(`http://localhost:3001/api/store/${slug}`)
+    fetch(`${import.meta.env.VITE_API_URL}/api/store/${slug}`)
       .then(res => res.json())
       .then(data => setStore(data));
 
     // Obtener órdenes con token de autenticación
     const token = localStorage.getItem('token');
-    fetch(`http://localhost:3001/api/store/${slug}/orders`, {
+    fetch(`${import.meta.env.VITE_API_URL}/api/store/${slug}/orders`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     })
-      .then(res => res.json())
+      .then(res => {
+        // Token caducado o inválido: al cerrar sesión, este efecto redirige al login.
+        if (res.status === 401) {
+          logout();
+          return null;
+        }
+        return res.json();
+      })
       .then(data => {
-        setOrders(data.orders);
+        if (!data) return;
+        setOrders(data.orders || []);
         setLoading(false);
       })
       .catch(error => {
         console.error('Error cargando órdenes:', error);
         setLoading(false);
       });
-  }, [slug, user, isOwner, navigate]);
+  }, [slug, user, isOwner, logout, navigate]);
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:3001/api/store/${slug}/orders/${orderId}/status`,
+        `${import.meta.env.VITE_API_URL}/api/store/${slug}/orders/${orderId}/status`,
         {
           method: 'PUT',
           headers: {

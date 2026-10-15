@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext();
 
@@ -10,23 +10,21 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+// Lee la sesión guardada. Se usa como valor inicial de `user` para que esté disponible
+// desde el primer render: si se leyera en un useEffect, las páginas protegidas verían
+// `user = null` al recargar y mandarían al login. Si el token ya no es válido, la API
+// responde 401 y la página llama a logout().
+const readStoredUser = () => {
+  if (!localStorage.getItem('token')) return null;
+  try {
+    return JSON.parse(localStorage.getItem('user') || 'null');
+  } catch {
+    return null;
+  }
+};
 
-  useEffect(() => {
-    // Verificar si hay un token guardado
-    const token = localStorage.getItem('token');
-    if (token) {
-      // Aquí podríamos validar el token con el backend
-      // Por simplicidad, asumimos que es válido si existe
-      const userData = JSON.parse(localStorage.getItem('user') || 'null');
-      if (userData) {
-        setUser(userData);
-      }
-    }
-    setLoading(false);
-  }, []);
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(readStoredUser);
 
   const login = async (email, password) => {
     try {
@@ -70,7 +68,6 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     isOwner,
-    loading,
   };
 
   return (

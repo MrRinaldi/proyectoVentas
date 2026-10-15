@@ -17,7 +17,7 @@ const initialForm = {
 function ProductManagement() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { user, isOwner } = useAuth();
+  const { user, isOwner, logout } = useAuth();
   const [store, setStore] = useState(null);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -43,13 +43,19 @@ function ProductManagement() {
     const loadData = async () => {
       try {
         const [storeRes, productsRes] = await Promise.all([
-          fetch(`http://localhost:3001/api/store/${slug}`),
-          fetch("http://localhost:3001/api/products", {
+          fetch(`${import.meta.env.VITE_API_URL}/api/store/${slug}`),
+          fetch(`${import.meta.env.VITE_API_URL}/api/products`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }),
         ]);
+
+        // Token caducado o inválido: al cerrar sesión, este efecto redirige al login.
+        if (productsRes.status === 401) {
+          logout();
+          return;
+        }
 
         if (!storeRes.ok) {
           throw new Error("No se pudo cargar la tienda");
@@ -70,7 +76,7 @@ function ProductManagement() {
     };
 
     loadData();
-  }, [slug, user, isOwner, navigate, token]);
+  }, [slug, user, isOwner, logout, navigate, token]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -88,7 +94,7 @@ function ProductManagement() {
 
   const refreshProducts = async () => {
     try {
-      const response = await fetch("http://localhost:3001/api/products", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -124,8 +130,8 @@ function ProductManagement() {
       }
 
       const url = editingId
-        ? `http://localhost:3001/api/products/${editingId}`
-        : "http://localhost:3001/api/products";
+        ? `${import.meta.env.VITE_API_URL}/api/products/${editingId}`
+        : `${import.meta.env.VITE_API_URL}/api/products`;
       const method = editingId ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -142,8 +148,9 @@ function ProductManagement() {
         throw new Error(data.message || "Error guardando producto");
       }
 
-      setMessage(editingId ? "Producto actualizado." : "Producto creado.");
+      // resetForm() borra el mensaje, así que va antes de mostrar el de éxito.
       resetForm();
+      setMessage(editingId ? "Producto actualizado." : "Producto creado.");
       refreshProducts();
     } catch (error) {
       console.error(error);
@@ -173,7 +180,7 @@ function ProductManagement() {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/products/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

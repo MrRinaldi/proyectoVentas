@@ -32,7 +32,7 @@ function ProductCard({ product }) {
   const [meatCount, setMeatCount] = useState(1);
 
   // Construir la URL completa de la imagen desde el backend
-  const imageUrl = product.image_medium ? `http://localhost:3001${product.image_medium}` : '/placeholder-image.jpg';
+  const imageUrl = product.image_medium ? `${import.meta.env.VITE_API_URL}${product.image_medium}` : '/placeholder-image.jpg';
 
   const handleAddToCart = () => {
     const itemWithOptions = {

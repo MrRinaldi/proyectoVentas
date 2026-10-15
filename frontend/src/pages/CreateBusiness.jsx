@@ -22,7 +22,7 @@ function CreateBusiness() {
 
     try {
       // Crear la tienda
-      const createResponse = await fetch('http://localhost:3001/api/auth/create-business', {
+      const createResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/create-business`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

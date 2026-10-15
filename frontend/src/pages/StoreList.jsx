@@ -9,7 +9,7 @@ function StoreList() {
   useEffect(() => {
     const fetchBusinesses = async () => {
       try {
-        const response = await axios.get("/api/businesses");
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/businesses`);
         setBusinesses(response.data.businesses);
       } catch (error) {
         console.error("Error cargando tiendas:", error);

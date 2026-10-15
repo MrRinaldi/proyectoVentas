@@ -33,10 +33,10 @@ Al terminar una tarea, informar en español: qué se resolvió, qué cambió y d
 se hicieron y sus resultados, qué se revisó de seguridad, dependencias nuevas y riesgos pendientes.
 
 ## Problemas conocidos (análisis del 2026-10-15, pendientes de corregir)
-1. `backend/.env` con contraseña real y `JWT_SECRET` subido a un repositorio público.
-2. `POST /api/auth/register` acepta `role` del cliente → cualquiera puede hacerse dueño de cualquier tienda.
-3. Pedidos (`GET/PUT /api/store/:slug/orders`) no comprueban que el usuario sea de esa tienda.
-4. `updateProduct` usa `image_medium` sin definir → editar productos siempre falla.
-5. `createProduct` inserta `product_type`, columna que no existe en `init.sql`.
-6. `frontend/.env` no está en el repositorio → `VITE_API_URL` indefinida en una instalación limpia.
-7. `node_modules/` de la raíz versionado (2068 archivos) y `package.json` raíz con una dependencia sin uso.
+Ya corregidos: `.env` versionado, registro con rol del cliente, pedidos sin comprobar la tienda,
+`VITE_API_URL` indefinida en Docker. Pendientes:
+1. `updateProduct` usa `image_medium` sin definir → editar productos siempre falla.
+2. `createProduct` inserta `product_type`, columna que no existe en `init.sql`.
+3. Varias pantallas usan `http://localhost:3001` escrito a mano en vez de `VITE_API_URL`.
+4. `node_modules/` de la raíz versionado (2068 archivos) y `package.json` raíz con una dependencia sin uso.
+5. El historial de Git conserva el `backend/.env` antiguo (la contraseña debe cambiarse).

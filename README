@@ -10,6 +10,19 @@ Aplicación de ventas con frontend en React y backend en Node.js, usando MySQL c
 ## Instalación y Ejecución
 1. Clona el repositorio.
 2. Ejecuta `docker-compose up --build` para construir e iniciar los servicios.
+3. Abre http://localhost:5173
+
+No hace falta crear ningún archivo `.env` para desarrollo. Si `backend/.env` no existe, el backend
+usa un `JWT_SECRET` temporal (las sesiones se cierran al reiniciar el backend).
+Para producción, copia `backend/.env.example` como `backend/.env`, completa los valores y usa `NODE_ENV=production`.
+
+### Usuarios de prueba (datos de `init.sql`)
+Contraseña de todos: `password123`
+- `owner@tienda.com` — La Tienda del Barrio
+- `owner@comidas.com` — Comidas Rápidas Don Jorge
+- `owner@perfumeria.com` — Perfumería Elegancia
+
+`init.sql` solo se aplica la primera vez que se crea la base de datos (volumen `db_data` vacío).
 
 ## Persistencia de Base de Datos
 Para mantener los datos de la base de datos entre diferentes PCs:

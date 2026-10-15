@@ -4,10 +4,16 @@ const pool = require("./src/config/db");
 
 const PORT = process.env.PORT || 3001;
 
-// Sin secreto, jwt.sign/verify fallarían en cada petición; mejor no arrancar.
+// En producción el secreto es obligatorio. En desarrollo, si falta, se genera
+// uno aleatorio para que el proyecto arranque sin configurar nada; las sesiones
+// abiertas se pierden al reiniciar el servidor.
 if (!process.env.JWT_SECRET) {
-  console.error("❌ Falta JWT_SECRET. Defínelo en .env (ver .env.example).");
-  process.exit(1);
+  if (process.env.NODE_ENV === "production") {
+    console.error("❌ Falta JWT_SECRET. Defínelo en backend/.env (ver backend/.env.example).");
+    process.exit(1);
+  }
+  process.env.JWT_SECRET = require("crypto").randomBytes(48).toString("hex");
+  console.warn("⚠️  JWT_SECRET no definido: usando uno temporal (solo desarrollo).");
 }
 
 async function waitForDB() {

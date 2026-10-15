@@ -32,6 +32,15 @@ Get-Content scripts/migrations/001-product-type.sql | docker exec -i mysql_db my
 Get-Content scripts/migrations/002-image-paths.sql | docker exec -i mysql_db mysql -uroot -proot ventas
 ```
 
+## Pruebas
+Con la aplicación levantada (`docker-compose up`) y Node 18 o superior:
+```
+cd backend
+npm test
+```
+Prueban la API: tiendas, login, pedidos, productos y los controles de seguridad (un dueño no puede
+ver ni modificar datos de otra tienda). Modifican datos de ejemplo, así que úsalas solo en desarrollo.
+
 ## Persistencia de Base de Datos
 Para mantener los datos de la base de datos entre diferentes PCs:
 

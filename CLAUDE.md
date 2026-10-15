@@ -49,8 +49,20 @@ Pendientes:
 reciben 401 de la API llaman a `logout()`, y su efecto las redirige al login.
 
 ## Pruebas
-No hay pruebas automáticas en el repo. Para verificar en local: `docker compose up -d` y probar la API
-con los usuarios de prueba del README (incluir siempre el caso "usuario de otra tienda").
+`backend/tests/api.test.mjs` (sin dependencias): con `docker compose up -d`, ejecutar `npm test` en `backend/`.
+Ejecutarlas después de cada cambio. Al añadir una funcionalidad, añadir sus casos, incluido siempre
+"usuario de otra tienda".
+
+## Próximo paso: verificación general como aplicación base
+Pendiente (pedido por el usuario el 2026-10-15). La app será una **base que se adapta a cada cliente**,
+así que la revisión debe evaluar, además de errores y seguridad:
+- Qué cambia por cliente (nombre, colores, logo, tipo de tienda, textos, moneda) y si se configura en un
+  solo sitio o está repartido por el código; `businesses.primary_color` y `type` existen pero casi no se usan.
+- Variantes de tienda (`Store` y `StoreBurger`, `ProductCard` y `BurgerProductCard`): duplicación y cómo
+  añadir un tipo nuevo sin copiar componentes.
+- Flujos completos en el navegador (cliente y dueño), incluido móvil.
+- Configuración y despliegue (variables de entorno, Docker, migraciones) para instalar a un cliente nuevo.
+Resultado esperado: informe con hallazgos priorizados y propuesta de fases, antes de cambiar código.
 
 ## Imágenes
 El backend sirve `backend/images/` en `/api/images/`; la BD guarda rutas `/api/images/...` (o una URL `https://`).

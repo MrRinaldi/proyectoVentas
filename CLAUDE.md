@@ -36,14 +36,14 @@ se hicieron y sus resultados, qué se revisó de seguridad, dependencias nuevas 
 Ya corregidos: `.env` versionado, registro con rol del cliente, pedidos sin comprobar la tienda,
 `VITE_API_URL` indefinida en Docker, crear/editar productos (columna `product_type`, ver `scripts/migrations`),
 URLs `localhost:3001` escritas a mano, login al recargar páginas protegidas, mensaje de producto.
+Limpieza hecha: `node_modules` y `package.json` de la raíz, componentes y scripts sin uso.
+`backend/qrys db/` son scripts de datos de trabajo de Fran (no código de la app): no borrar.
 Pendientes:
-1. `node_modules/` de la raíz versionado (2068 archivos) y `package.json` raíz con una dependencia sin uso.
-2. **Antes de salir de local / producción:** el historial de Git conserva el `backend/.env` antiguo;
+1. **Antes de salir de local / producción:** el historial de Git conserva el `backend/.env` antiguo;
    cambiar esa contraseña donde se use y no reutilizarla. Pospuesto a propósito mientras se prueba en local.
-3. Las imágenes de logos y productos de `init.sql` no existen, y el backend las sirve en `/api/images`
+2. Las imágenes de logos y productos de `init.sql` no existen, y el backend las sirve en `/api/images`
    mientras la BD guarda rutas `/images/...`.
-4. `npx eslint` marca `react-refresh/only-export-components` en `AuthContext.jsx` (exporta `useAuth`); no afecta al funcionamiento.
-5. `HomeNew.jsx`, `Button.jsx` y `Sidebar.jsx` no se usan.
+3. `npx eslint` marca `react-refresh/only-export-components` en `AuthContext.jsx` (exporta `useAuth`); no afecta al funcionamiento.
 
 ## Sesión en el frontend
 `AuthContext` lee `user` de `localStorage` al crearse (sin estado `loading`). Las páginas protegidas que

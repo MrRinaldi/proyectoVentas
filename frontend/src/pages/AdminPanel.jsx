@@ -2,14 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import StoreSettingsForm from "../components/StoreSettingsForm";
+import { STORE_TYPES, getStoreType } from "../config/catalog";
 
 const API = `${import.meta.env.VITE_API_URL}/api/admin`;
-
-const STORE_TYPES = {
-  grocery: "Almacén",
-  food: "Comidas",
-  perfumery: "Perfumería",
-};
 
 const emptyForm = {
   businessName: "",
@@ -151,7 +146,7 @@ function AdminPanel() {
             <label className="text-sm font-medium text-gray-700">
               Tipo
               <select name="type" value={form.type} onChange={handleChange} className={inputClass}>
-                {Object.entries(STORE_TYPES).map(([value, label]) => (
+                {Object.entries(STORE_TYPES).map(([value, { label }]) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>
@@ -224,7 +219,7 @@ function AdminPanel() {
                           <span className="text-gray-400 text-xs">/{business.slug}</span>
                         )}
                       </td>
-                      <td className="py-2 pr-4">{STORE_TYPES[business.type] || business.type}</td>
+                      <td className="py-2 pr-4">{getStoreType(business.type).label}</td>
                       <td className="py-2 pr-4">{business.owner_email || "—"}</td>
                       <td className="py-2 pr-4">{business.product_count}</td>
                       <td className="py-2 pr-4">{business.order_count}</td>

@@ -4,6 +4,7 @@ import { useCustomer } from "../context/CustomerContext";
 import StoreLayout from "../components/StoreLayout";
 import StoreHeader from "../components/StoreHeader";
 import { formatPrice } from "../utils/money";
+import { describeOptions } from "../config/catalog";
 import { getStatusColor, getStatusText } from "../utils/orderStatus";
 
 // "Mis pedidos": los pedidos que el cliente hizo con su cuenta en esta tienda.
@@ -76,7 +77,7 @@ function CustomerOrders() {
                       <li key={index} className="flex justify-between py-1">
                         <span>
                           {item.product_name} x{item.quantity}
-                          {item.options?.meatCount && ` · ${item.options.meatCount} carne${item.options.meatCount > 1 ? "s" : ""}`}
+                          {describeOptions(item.options) && ` · ${describeOptions(item.options)}`}
                         </span>
                         <span>{formatPrice(item.price * item.quantity, money)}</span>
                       </li>

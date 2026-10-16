@@ -1,7 +1,6 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import Store from "./pages/Store";
-import StoreBurger from "./pages/StoreBurger";
 import Orders from "./pages/Orders";
 import Login from "./pages/Login";
 import StoreList from "./pages/StoreList";
@@ -12,6 +11,12 @@ import CustomerAccount from "./pages/CustomerAccount";
 import CustomerOrders from "./pages/CustomerOrders";
 import Customers from "./pages/Customers";
 
+// Enlaces antiguos a /:slug/burger: ahora todas las tiendas usan la misma página.
+function RedirectToStore() {
+  const { slug } = useParams();
+  return <Navigate to={`/${slug}`} replace />;
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -20,7 +25,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/:slug" element={<Store />} />
-        <Route path="/:slug/burger" element={<StoreBurger />} />
+        <Route path="/:slug/burger" element={<RedirectToStore />} />
         <Route path="/:slug/orders" element={<Orders />} />
         <Route path="/:slug/products" element={<ProductManagement />} />
         <Route path="/:slug/settings" element={<StoreSettings />} />

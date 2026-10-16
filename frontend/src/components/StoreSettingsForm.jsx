@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { formatPrice } from "../utils/money";
 import { getImageUrl } from "../utils/images";
+import { STORE_TYPES } from "../config/catalog";
 
 // Todas las monedas ISO 4217 que conoce el navegador, con su nombre en español.
 const currencyNames = new Intl.DisplayNames(["es"], { type: "currency" });
@@ -21,7 +22,6 @@ const LOCALES = {
   "pt-BR": "Portugués (Brasil)",
 };
 
-const STORE_TYPES = { grocery: "Almacén", food: "Comidas", perfumery: "Perfumería" };
 
 // Formulario de configuración de una tienda. Lo usan "Mi tienda" y el panel del superadmin
 // (con showType, porque solo el superadmin cambia el tipo de tienda).
@@ -77,7 +77,7 @@ function StoreSettingsForm({ business, showType = false, onSave, onCancel }) {
         <label className="text-sm font-medium text-gray-700">
           Tipo de tienda
           <select name="type" value={form.type} onChange={handleChange} className={inputClass}>
-            {Object.entries(STORE_TYPES).map(([value, label]) => (
+            {Object.entries(STORE_TYPES).map(([value, { label }]) => (
               <option key={value} value={value}>{label}</option>
             ))}
           </select>

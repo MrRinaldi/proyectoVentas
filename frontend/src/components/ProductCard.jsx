@@ -2,141 +2,104 @@ import { useContext, useState } from "react";
 import { CartContext } from "../context/CartContext";
 import { getImageUrl, showPlaceholderOnError } from "../utils/images";
 import { formatPrice } from "../utils/money";
+import { getProductType } from "../config/catalog";
 
-// Función para obtener ícono según tipo de producto
-function getProductIcon(productType) {
-  const icons = {
-    burger: '🍔',
-    drink: '🥤',
-    side: '🍟',
-    dessert: '🍰',
-    other: '📦'
-  };
-  return icons[productType] || icons.other;
-}
+// Valor inicial de cada opción del tipo de producto (el primero de la lista).
+const defaultOptions = (options) =>
+  Object.fromEntries(options.map((option) => [option.key, option.values[0]]));
 
-// Función para obtener color según tipo de producto
-function getProductColor(productType) {
-  const colors = {
-    burger: 'from-orange-500 to-red-600',
-    drink: 'from-blue-500 to-cyan-600',
-    side: 'from-yellow-500 to-orange-600',
-    dessert: 'from-pink-500 to-purple-600',
-    other: 'from-gray-500 to-gray-700'
-  };
-  return colors[productType] || colors.other;
-}
-
+// Tarjeta de producto para cualquier tipo de tienda. El icono, el nombre del tipo y las opciones
+// (p. ej. cantidad de carnes) salen de PRODUCT_TYPES en config/catalog.js.
 function ProductCard({ product, business }) {
   const { addToCart } = useContext(CartContext);
-  const [showOptions, setShowOptions] = useState(false);
+  const productType = getProductType(product.product_type);
   const [quantity, setQuantity] = useState(1);
-  const [meatCount, setMeatCount] = useState(1);
-
-  const imageUrl = getImageUrl(product.image_medium || product.image);
+  const [selected, setSelected] = useState(() => defaultOptions(productType.options));
 
   const handleAddToCart = () => {
-    const itemWithOptions = {
-      ...product,
-      meatCount: meatCount
-    };
-    addToCart(itemWithOptions, quantity);
+    addToCart({ ...product, ...selected }, quantity);
     setQuantity(1);
-    setMeatCount(1);
-    setShowOptions(false);
+    setSelected(defaultOptions(productType.options));
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition p-4 flex flex-col justify-between">
-      
-      <img src={imageUrl} alt={product.name} onError={showPlaceholderOnError} className="w-full h-48 object-cover rounded-t-xl mb-4" />
-
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xl">{getProductIcon(product.product_type)}</span>
-          <h3 className="font-semibold text-lg">{product.name}</h3>
-        </div>
-
-        <p className="text-gray-500 text-sm mt-1">
-          {product.description}
-        </p>
+    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
+      <div className="relative h-48 overflow-hidden">
+        <img
+          src={getImageUrl(product.image_medium || product.image)}
+          alt={product.name}
+          onError={showPlaceholderOnError}
+          className="w-full h-full object-cover"
+        />
+        {productType.label && (
+          <span className="absolute top-3 left-3 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-semibold">
+            {productType.icon} {productType.label}
+          </span>
+        )}
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
-        <span className="text-xl font-bold text-[var(--brand)]">
+      <div className="p-4 flex flex-col flex-1">
+        <h3 className="font-semibold text-lg text-gray-800">
+          {!productType.label && <span className="mr-1">{productType.icon}</span>}
+          {product.name}
+        </h3>
+        <p className="text-gray-500 text-sm mt-1 line-clamp-3 flex-1">{product.description}</p>
+
+        <p className="text-2xl font-bold text-[var(--brand)] my-3">
           {formatPrice(product.price, business)}
-        </span>
+        </p>
 
-        <button
-          onClick={() => setShowOptions(!showOptions)}
-          className={`bg-gradient-to-r ${getProductColor(product.product_type)} text-white px-3 py-2 rounded-lg hover:shadow-lg transition`}
-        >
-          Agregar
-        </button>
-      </div>
-
-      {/* Panel de opciones */}
-      {showOptions && (
-        <div className="mt-4 p-3 border-t border-gray-200 bg-gray-50 rounded-lg">
-          
-          {/* Selector de carnes */}
-          <div className="mb-3">
-            <p className="text-sm font-semibold text-gray-700 mb-2">Cantidad de Carnes:</p>
-            <div className="flex gap-2 mb-3">
-              {[1, 2, 3, 4].map((count) => (
-                <label key={count} className="flex items-center gap-1 cursor-pointer">
+        {productType.options.map((option) => (
+          <fieldset key={option.key} className="mb-3">
+            <legend className="text-sm font-semibold text-gray-700 mb-1">{option.label}</legend>
+            <div className="flex flex-wrap gap-2">
+              {option.values.map((value) => (
+                <label
+                  key={value}
+                  className={`cursor-pointer px-3 py-1 rounded-full border text-sm ${selected[option.key] === value
+                    ? "bg-[var(--brand)] border-[var(--brand)] text-white" : "border-gray-300 text-gray-700"}`}
+                >
                   <input
                     type="radio"
-                    name={`meat-${product.id}`}
-                    value={count}
-                    checked={meatCount === count}
-                    onChange={() => setMeatCount(count)}
-                    className="w-3 h-3 cursor-pointer"
+                    name={`${option.key}-${product.id}`}
+                    value={value}
+                    checked={selected[option.key] === value}
+                    onChange={() => setSelected((prev) => ({ ...prev, [option.key]: value }))}
+                    className="sr-only"
                   />
-                  <span className="text-xs font-medium">{count}x</span>
+                  {value}
                 </label>
               ))}
             </div>
-          </div>
+          </fieldset>
+        ))}
 
-          {/* Selector de cantidad */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-sm font-semibold">Cantidad:</span>
-            <div className="flex items-center border border-gray-300 rounded">
-              <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="px-2 py-1 text-gray-600 hover:bg-gray-100"
-              >
-                −
-              </button>
-              <span className="px-3 text-sm font-semibold">{quantity}</span>
-              <button
-                onClick={() => setQuantity(quantity + 1)}
-                className="px-2 py-1 text-gray-600 hover:bg-gray-100"
-              >
-                +
-              </button>
-            </div>
-          </div>
-
-          {/* Botones de acción */}
-          <div className="flex gap-2">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center border border-gray-300 rounded-lg">
             <button
-              onClick={handleAddToCart}
-              className="flex-1 bg-[var(--brand)] text-white px-3 py-2 rounded hover:opacity-90 transition text-sm font-semibold"
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              aria-label="Quitar uno"
+              className="px-3 py-2 text-gray-600 hover:bg-gray-100"
             >
-              Confirmar
+              −
             </button>
+            <span className="px-3 font-semibold">{quantity}</span>
             <button
-              onClick={() => setShowOptions(false)}
-              className="flex-1 bg-gray-300 text-gray-700 px-3 py-2 rounded hover:bg-gray-400 transition text-sm font-semibold"
+              onClick={() => setQuantity(quantity + 1)}
+              aria-label="Añadir uno"
+              className="px-3 py-2 text-gray-600 hover:bg-gray-100"
             >
-              Cancelar
+              +
             </button>
           </div>
-
+          <button
+            onClick={handleAddToCart}
+            className="flex-1 bg-[var(--brand)] text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition"
+          >
+            Agregar
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }

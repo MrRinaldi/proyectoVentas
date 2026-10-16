@@ -1,35 +1,28 @@
-function SidebarCategories({ categories, setSelectedCategory }) {
+// Categorías como lista vertical (tiendas con categoryLayout "sidebar").
+function SidebarCategories({ categories, selectedCategory, setSelectedCategory }) {
+  const itemClass = (active) => `w-full text-left p-2 rounded ${active
+    ? "bg-[var(--brand)] text-white" : "hover:bg-gray-100"}`;
+
   return (
     <div>
-
-      <h2 className="font-bold text-lg mb-4">
-        Categorías
-      </h2>
-
+      <h2 className="font-bold text-lg mb-4">Categorías</h2>
       <ul className="space-y-2">
-
         <li>
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className="w-full text-left p-2 rounded hover:bg-gray-100"
-          >
+          <button onClick={() => setSelectedCategory(null)} className={itemClass(selectedCategory === null)}>
             Todas
           </button>
         </li>
-
-        {categories.map((cat) => (
-          <li key={cat.id}>
+        {categories.map((category) => (
+          <li key={category.id}>
             <button
-              onClick={() => setSelectedCategory(cat.id)}
-              className="w-full text-left p-2 rounded hover:bg-gray-100"
+              onClick={() => setSelectedCategory(category.id)}
+              className={itemClass(selectedCategory === category.id)}
             >
-              {cat.name}
+              {category.name}
             </button>
           </li>
         ))}
-
       </ul>
-
     </div>
   );
 }

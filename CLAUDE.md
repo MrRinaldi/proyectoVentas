@@ -52,8 +52,11 @@ Cada fase: cambios mínimos, ampliar `backend/tests/api.test.mjs`, probar en nav
   gestión. El checkout sigue abierto sin cuenta (`optionalAuth`); con sesión, el pedido se vincula.
   Frontend: `CustomerContext` (sesión por tienda en `customer:<slug>`), páginas `/:slug/cuenta`,
   `/:slug/mis-pedidos` y `/:slug/clientes`; el acceso del personal sigue en `/login`.
-- **Fase 10 — Tienda configurable por tipo:** una sola página de tienda y una sola tarjeta de producto
-  según `businesses.type`; las opciones (p. ej. cantidad de carnes) solo donde correspondan; arreglos de móvil.
+- **Fase 10 — Tienda configurable por tipo (hecha):** `frontend/src/config/catalog.js` define los tipos
+  de tienda (cómo se muestran las categorías) y de producto (icono, nombre, opciones). Una sola página
+  `Store.jsx` (pestañas o lista lateral) y una sola `ProductCard.jsx` (opciones solo si el tipo de producto
+  las tiene). Eliminados `StoreBurger`, `BurgerProductCard`, `BurgerProductList`, `BurgerCategoryTabs`;
+  `/:slug/burger` redirige a `/:slug`. Tienda inexistente muestra un mensaje.
 - **Fase 11 — WhatsApp real (anotado para más adelante):** al confirmar el cliente el pedido, aviso a la
   tienda y confirmación al cliente con artículos, cantidades y total en su moneda; tabla de notificaciones
   con estado de envío visible en el panel; número receptor configurable por tienda; API de WhatsApp
@@ -84,7 +87,7 @@ Cada fase: cambios mínimos, ampliar `backend/tests/api.test.mjs`, probar en nav
 - Cambio de esquema = actualizar `init.sql` **y** añadir una migración en `scripts/migrations/` (y el README).
 
 ## Funcionalidades que no deben romperse
-Listado de tiendas, página pública de tienda y variante burger, carrito y checkout, login de dueños y del
+Listado de tiendas, página pública de tienda (pestañas o lista lateral según el tipo), carrito y checkout, login de dueños y del
 superadmin, panel `/admin` (crear y suspender tiendas), gestión de productos, gestión de pedidos con cambio de estado,
 cuenta de cliente por tienda (registro, login, Mis pedidos) y compra sin cuenta, lista de clientes.
 
@@ -105,8 +108,14 @@ Pendientes:
    cambiar esa contraseña donde se use y no reutilizarla. Pospuesto a propósito mientras se prueba en local.
 2. `npx eslint` marca `react-refresh/only-export-components` en `AuthContext.jsx`, `CartContext.jsx` y `CustomerContext.jsx`
    (exportan el contexto junto al componente); no afecta al funcionamiento.
-3. La tarjeta normal de producto ofrece "Cantidad de carnes" en todos los productos (fase 10); el backend
-   solo la guarda en productos `product_type = 'burger'`.
+
+## Tipos de tienda y producto
+- **Rubro nuevo con el mismo diseño:** solo datos (crear la tienda con un tipo existente y sus productos).
+- **Tipo de producto nuevo** (icono y nombre): una entrada en `PRODUCT_TYPES` de `config/catalog.js`.
+- **Tipo de tienda nuevo:** entrada en `STORE_TYPES` de `config/catalog.js`, en `STORE_TYPES` de
+  `backend/src/utils/businessSettings.js` y en el ENUM de `businesses.type` (init.sql + migración).
+- **Opción de producto nueva** (como `meatCount`): hoy el carrito (`CartContext`) y `orders.controller.js`
+  solo conocen `meatCount`; una opción distinta necesita soporte en los dos y en `describeOptions`.
 
 ## Sesión y carrito en el frontend
 `AuthContext` lee `user` de `localStorage` al crearse (sin estado `loading`). Las páginas protegidas que
@@ -118,7 +127,7 @@ El carrito es por tienda: `StoreHeader` llama a `selectStore(slug)` y `CartConte
 - Importes: siempre `formatPrice(importe, tienda)` de `src/utils/money.js` (nunca "$" a mano). La tienda
   (`currency`, `locale`) llega como prop `business` desde la página; un pedido usa su propia `currency`.
 - Color de marca: `StoreLayout` define `--brand` con `businesses.primary_color`; usar `bg-[var(--brand)]`,
-  `text-[var(--brand)]`, etc. La tarjeta de hamburguesas aún usa colores por tipo de producto (fase 10).
+  `text-[var(--brand)]`, etc.
 
 ## Pruebas
 `backend/tests/api.test.mjs` (sin dependencias): con `docker compose up -d`, ejecutar `npm test` en `backend/`.

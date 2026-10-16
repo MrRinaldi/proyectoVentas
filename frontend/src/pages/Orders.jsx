@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { formatPrice } from "../utils/money";
+import { describeOptions } from "../config/catalog";
 import { getStatusColor, getStatusText } from "../utils/orderStatus";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
@@ -150,7 +151,7 @@ function Orders() {
                       <div key={item.id} className="flex justify-between text-sm">
                         <span>
                           {item.product_name} x{item.quantity}
-                          {item.options?.meatCount && ` · ${item.options.meatCount} carne${item.options.meatCount > 1 ? 's' : ''}`}
+                          {describeOptions(item.options) && ` · ${describeOptions(item.options)}`}
                         </span>
                         <span>{formatPrice(item.price * item.quantity, { currency: order.currency, locale: store.business.locale })}</span>
                       </div>

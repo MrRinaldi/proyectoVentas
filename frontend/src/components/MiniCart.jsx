@@ -2,18 +2,7 @@ import { useContext, useState, useRef, useEffect } from "react";
 import { formatPrice } from "../utils/money";
 import { CartContext } from "../context/CartContext";
 import CheckoutModal from "./CheckoutModal";
-
-// Función para obtener ícono según tipo de producto
-function getProductIcon(productType) {
-  const icons = {
-    burger: '🍔',
-    drink: '🥤',
-    side: '🍟',
-    dessert: '🍰',
-    other: '📦'
-  };
-  return icons[productType] || icons.other;
-}
+import { describeOptions, getProductType } from "../config/catalog";
 
 function MiniCart({ business }) {
 
@@ -98,13 +87,13 @@ function MiniCart({ business }) {
               <div className="flex flex-col text-sm flex-1">
 
                 <div className="flex items-center gap-1">
-                  <span className="text-base">{getProductIcon(item.product_type)}</span>
+                  <span className="text-base">{getProductType(item.product_type).icon}</span>
                   <span className="font-medium">{item.name}</span>
                 </div>
 
-                {item.meatCount && (
-                  <span className="text-orange-600 text-xs font-semibold ml-5">
-                    🍖 {item.meatCount} carnes
+                {describeOptions(item) && (
+                  <span className="text-gray-600 text-xs font-semibold ml-5">
+                    {describeOptions(item)}
                   </span>
                 )}
 

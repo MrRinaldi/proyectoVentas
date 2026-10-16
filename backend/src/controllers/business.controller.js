@@ -3,7 +3,7 @@ const pool = require("../config/db");
 exports.getBusinesses = async (req, res) => {
   try {
     const [businesses] = await pool.query(
-      "SELECT id, name, slug, logo, primary_color, whatsapp_number, phone FROM businesses ORDER BY name"
+      "SELECT id, name, slug, logo, primary_color, whatsapp_number, phone FROM businesses WHERE is_active = TRUE ORDER BY name"
     );
 
     res.json({ businesses });

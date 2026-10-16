@@ -18,6 +18,7 @@ Para producción, copia `backend/.env.example` como `backend/.env`, completa los
 
 ### Usuarios de prueba (datos de `init.sql`)
 Contraseña de todos: `password123`
+- `admin@plataforma.com` — superadministrador: panel de la plataforma en http://localhost:5173/admin
 - `owner@tienda.com` — La Tienda del Barrio
 - `owner@comidas.com` — Comidas Rápidas Don Jorge
 - `owner@perfumeria.com` — Perfumería Elegancia
@@ -31,7 +32,16 @@ en orden, una sola vez, con los contenedores en marcha. Por ejemplo, en PowerShe
 Get-Content scripts/migrations/001-product-type.sql | docker exec -i mysql_db mysql -uroot -proot ventas
 Get-Content scripts/migrations/002-image-paths.sql | docker exec -i mysql_db mysql -uroot -proot ventas
 Get-Content scripts/migrations/003-order-items-history.sql | docker exec -i mysql_db mysql -uroot -proot ventas
+Get-Content scripts/migrations/004-superadmin-and-store-status.sql | docker exec -i mysql_db mysql -uroot -proot ventas
 ```
+
+### Superadministrador
+Las tiendas se crean y suspenden desde el panel `/admin`, solo accesible para el superadministrador.
+En una base de datos sin superadministrador (por ejemplo, tras aplicar la migración 004), créalo con:
+```
+docker exec -it backend_app node scripts/create-superadmin.js tu@email.com una-contraseña-segura
+```
+Ejecutarlo con un email existente de superadministrador le cambia la contraseña.
 
 ## Pruebas
 Con la aplicación levantada (`docker-compose up`) y Node 18 o superior:

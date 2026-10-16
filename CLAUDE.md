@@ -36,8 +36,11 @@ Cada fase: cambios mínimos, ampliar `backend/tests/api.test.mjs`, probar en nav
 - **Fase 6 — Pedidos correctos (hecha):** cantidades enteras 1–999, teléfono validado, total en céntimos,
   transacción al crear el pedido, `options` (cantidad de carnes en hamburguesas) y `product_name` en cada
   línea, historial que no se borra, JSON mal formado sin traza interna, carrito por tienda guardado en el navegador.
-- **Fase 7 — Roles y superadmin:** rol `superadmin`, middleware de roles en todas las rutas de gestión,
-  panel `/admin` (listar, crear, suspender tiendas y crear su administrador). Crear tienda deja de ser público.
+- **Fase 7 — Roles y superadmin (hecha):** rol `superadmin` (`business_id` NULL), `requireStaff` en todas
+  las rutas de gestión de una tienda (comprueba en cada petición que la tienda no esté suspendida),
+  `requireSuperadmin` en `/api/admin`; `businesses.is_active` (suspendida = oculta al público, sin pedidos
+  ni acceso de su personal); panel `/admin` (listar, crear tienda + su administrador, suspender/reactivar);
+  crear tienda ya no es público; script `backend/scripts/create-superadmin.js`; migración 004.
 - **Fase 8 — Configuración por tienda:** moneda, locale, color, logo y WhatsApp; pantalla "Mi tienda";
   `formatPrice` en catálogo, carrito, pedidos y panel; gestión de categorías.
 - **Fase 9 — Clientes finales:** registro/login por tienda, pedidos vinculados al cliente, "Mis pedidos",
@@ -63,6 +66,10 @@ Cada fase: cambios mínimos, ampliar `backend/tests/api.test.mjs`, probar en nav
 - Toda consulta que lea o modifique datos de un negocio debe filtrar por el `businessId` del token
   (`req.user.businessId`), nunca solo por el `slug` de la URL ni por datos del cliente.
 - Nunca confiar en `role`, precios ni totales enviados por el cliente; el precio se toma de la BD.
+- Toda ruta nueva de gestión de una tienda lleva `authMiddleware, authMiddleware.requireStaff`; las del
+  panel de plataforma van en `admin.routes.js` (protegidas con `requireSuperadmin`).
+- Las consultas públicas solo devuelven tiendas con `is_active = TRUE`.
+- Slugs reservados (no pueden ser tiendas): `admin`, `login`, `api` (`admin.controller.js`).
 - SQL siempre parametrizado. No exponer detalles de errores internos al cliente.
 - Secretos solo en variables de entorno, nunca en el repositorio.
 - La URL del backend en el frontend sale de `import.meta.env.VITE_API_URL`; no escribir `http://localhost:3001` a mano.
@@ -70,8 +77,8 @@ Cada fase: cambios mínimos, ampliar `backend/tests/api.test.mjs`, probar en nav
 - Cambio de esquema = actualizar `init.sql` **y** añadir una migración en `scripts/migrations/` (y el README).
 
 ## Funcionalidades que no deben romperse
-Listado de tiendas, página pública de tienda y variante burger, carrito y checkout, login de dueños,
-crear tienda, gestión de productos, gestión de pedidos con cambio de estado.
+Listado de tiendas, página pública de tienda y variante burger, carrito y checkout, login de dueños y del
+superadmin, panel `/admin` (crear y suspender tiendas), gestión de productos, gestión de pedidos con cambio de estado.
 
 ## Metodología de trabajo
 Seguir el flujo: analizar → planificar → implementar lo mínimo → verificar → revisar → documentar.
@@ -81,7 +88,8 @@ se hicieron y sus resultados, qué se revisó de seguridad, dependencias nuevas 
 ## Problemas conocidos
 Ya corregidos: `.env` versionado, registro con rol del cliente, pedidos sin comprobar la tienda,
 `VITE_API_URL` indefinida en Docker, crear/editar productos, URLs escritas a mano, login al recargar,
-mensaje de producto, rutas de imágenes, y lo de la fase 6.
+mensaje de producto, rutas de imágenes, y lo de las fases 6 y 7.
+Eliminadas en la fase 7: páginas `Home` (`/home`) y `CreateBusiness` (`/register`, `/create-business`).
 Limpieza hecha: `node_modules` y `package.json` de la raíz, componentes y scripts sin uso.
 `backend/qrys db/` son scripts de datos de trabajo de Fran (no código de la app): no borrar.
 Pendientes:

@@ -154,6 +154,63 @@ if (created) {
   check("Eliminar producto", r.status === 200, `status ${r.status}`);
 }
 
+// --- Superadministrador y tiendas (fase 7). Crea una tienda nueva en cada ejecución.
+r = await call("POST", "/api/auth/login", { body: { email: "admin@plataforma.com", password: "password123" } });
+const superToken = r.data?.token;
+check("Login del superadministrador", r.status === 200 && r.data.user?.role === "superadmin", `status ${r.status}, rol ${r.data?.user?.role}`);
+
+r = await call("GET", "/api/admin/businesses", { token: superToken });
+check("Superadmin ve todas las tiendas", r.status === 200 && r.data.businesses?.length >= 3, `status ${r.status}, ${r.data?.businesses?.length} tiendas`);
+
+r = await call("GET", "/api/admin/businesses", { token });
+check("Dueño de tienda NO entra al panel", r.status === 403, `status ${r.status}`);
+
+r = await call("GET", "/api/admin/businesses");
+check("Panel sin sesión rechazado", r.status === 401, `status ${r.status}`);
+
+r = await call("POST", "/api/products", { token: superToken, body: { name: "Intruso", price: 1 } });
+check("Superadmin no usa rutas de gestión de una tienda", r.status === 403, `status ${r.status}`);
+
+r = await call("POST", "/api/auth/create-business", { body: { businessName: "Pública", email: "x@x.com", password: "12345678" } });
+check("Crear tienda ya no es público", r.status === 404, `status ${r.status}`);
+
+const stamp = Date.now();
+const newStore = { businessName: `Tienda Prueba ${stamp}`, type: "food", ownerEmail: `dueno${stamp}@prueba.com`, ownerPassword: "clave-segura-1" };
+r = await call("POST", "/api/admin/businesses", { token: superToken, body: newStore });
+const newSlug = r.data?.business?.slug;
+check("Superadmin crea tienda con su administrador", r.status === 201 && newSlug === `tienda-prueba-${stamp}`, `status ${r.status}, slug ${newSlug}`);
+
+r = await call("POST", "/api/admin/businesses", { token: superToken, body: newStore });
+check("Tienda duplicada rechazada", r.status === 409, `status ${r.status}`);
+
+r = await call("POST", "/api/admin/businesses", { token: superToken, body: { ...newStore, businessName: "Admin", ownerEmail: `otro${stamp}@prueba.com` } });
+check("Nombre reservado rechazado", r.status === 400, `status ${r.status} ${r.data?.message ?? ""}`);
+
+r = await call("POST", "/api/admin/businesses", { token: superToken, body: { ...newStore, businessName: `Otra ${stamp}`, ownerEmail: `otro${stamp}@prueba.com`, ownerPassword: "corta" } });
+check("Contraseña corta rechazada", r.status === 400, `status ${r.status}`);
+
+r = await call("POST", "/api/auth/login", { body: { email: newStore.ownerEmail, password: newStore.ownerPassword } });
+const newOwnerToken = r.data?.token;
+check("El nuevo administrador inicia sesión en su tienda", r.status === 200 && r.data.user?.businessSlug === newSlug, `status ${r.status}`);
+
+const newBusinessId = (await call("GET", "/api/admin/businesses", { token: superToken })).data.businesses.find((b) => b.slug === newSlug)?.id;
+r = await call("PATCH", `/api/admin/businesses/${newBusinessId}/status`, { token: superToken, body: { isActive: false } });
+check("Superadmin suspende la tienda", r.status === 200, `status ${r.status}`);
+
+r = await call("GET", `/api/store/${newSlug}`);
+const hiddenInList = !(await call("GET", "/api/businesses")).data.businesses.some((b) => b.slug === newSlug);
+check("Tienda suspendida oculta al público", r.status === 404 && hiddenInList, `status ${r.status}, oculta en lista: ${hiddenInList}`);
+
+r = await call("GET", "/api/products", { token: newOwnerToken });
+check("Suspensión inmediata: el token del dueño deja de servir", r.status === 403, `status ${r.status}`);
+
+r = await call("POST", "/api/auth/login", { body: { email: newStore.ownerEmail, password: newStore.ownerPassword } });
+check("Dueño de tienda suspendida no puede iniciar sesión", r.status === 403, `status ${r.status}`);
+
+r = await call("PATCH", `/api/admin/businesses/${newBusinessId}/status`, { token: superToken, body: { isActive: true } });
+const visibleAgain = (await call("GET", `/api/store/${newSlug}`)).status === 200;
+check("Superadmin reactiva la tienda", r.status === 200 && visibleAgain, `status ${r.status}, visible: ${visibleAgain}`);
+
 for (const t of results) console.log(`${t.ok ? "OK   " : "FALLA"} ${t.name}  (${t.detail})`);
 
 const failed = results.filter((t) => !t.ok).length;

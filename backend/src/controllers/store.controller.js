@@ -6,7 +6,7 @@ exports.getStore = async (req, res) => {
 
     // Buscar negocio
     const [businesses] = await pool.query(
-      "SELECT id, name, logo, primary_color, whatsapp_number FROM businesses WHERE slug = ?",
+      "SELECT id, name, logo, primary_color, whatsapp_number FROM businesses WHERE slug = ? AND is_active = TRUE",
       [slug]
     );
 

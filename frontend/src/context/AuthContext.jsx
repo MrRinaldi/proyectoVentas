@@ -63,11 +63,16 @@ export const AuthProvider = ({ children }) => {
     return user && (user.role === 'owner' || user.role === 'admin');
   };
 
+  const isSuperadmin = () => {
+    return user?.role === 'superadmin';
+  };
+
   const value = {
     user,
     login,
     logout,
     isOwner,
+    isSuperadmin,
   };
 
   return (

@@ -15,15 +15,18 @@ CREATE TABLE businesses (
     primary_color VARCHAR(20),
     whatsapp_number VARCHAR(20),
     phone VARCHAR(20),
+    -- FALSE = tienda suspendida por el superadministrador: no se muestra ni acepta pedidos.
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    business_id INT NOT NULL,
+    -- NULL solo para el superadministrador (no pertenece a ninguna tienda).
+    business_id INT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('owner','admin') DEFAULT 'owner',
+    role ENUM('superadmin','owner','admin') NOT NULL DEFAULT 'owner',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
 );
@@ -99,7 +102,9 @@ INSERT INTO users (business_id, email, password, role) VALUES
 (1, 'owner@tienda.com', '$2b$10$68dLXV5zdo/RgStyCH40jOhkv8DNl1D0awnXi3JZbZb8hLDydWvmC', 'owner'),
 (1, 'admin@tienda.com', '$2b$10$68dLXV5zdo/RgStyCH40jOhkv8DNl1D0awnXi3JZbZb8hLDydWvmC', 'admin'),
 (2, 'owner@comidas.com', '$2b$10$68dLXV5zdo/RgStyCH40jOhkv8DNl1D0awnXi3JZbZb8hLDydWvmC', 'owner'),
-(3, 'owner@perfumeria.com', '$2b$10$68dLXV5zdo/RgStyCH40jOhkv8DNl1D0awnXi3JZbZb8hLDydWvmC', 'owner');
+(3, 'owner@perfumeria.com', '$2b$10$68dLXV5zdo/RgStyCH40jOhkv8DNl1D0awnXi3JZbZb8hLDydWvmC', 'owner'),
+-- Superadministrador de la plataforma (solo datos de desarrollo).
+(NULL, 'admin@plataforma.com', '$2b$10$68dLXV5zdo/RgStyCH40jOhkv8DNl1D0awnXi3JZbZb8hLDydWvmC', 'superadmin');
 
 -- =====================================
 -- TABLA: categorías

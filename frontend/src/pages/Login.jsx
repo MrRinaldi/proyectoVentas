@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 function Login() {
@@ -19,7 +19,9 @@ function Login() {
 
     if (result.success) {
       const businessSlug = result.user?.businessSlug;
-      if (businessSlug) {
+      if (result.user?.role === 'superadmin') {
+        navigate('/admin');
+      } else if (businessSlug) {
         navigate(`/${businessSlug}/orders`);
       } else {
         navigate('/');
@@ -39,10 +41,7 @@ function Login() {
             Iniciar Sesión
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            ¿No tienes cuenta?{' '}
-            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
-              Regístrate aquí
-            </Link>
+            Acceso para administradores de tiendas y de la plataforma
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

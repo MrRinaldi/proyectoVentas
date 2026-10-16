@@ -200,7 +200,7 @@ exports.createOrder = async (req, res) => {
 
     // Obtener el business_id desde el slug
     const [businesses] = await pool.query(
-      "SELECT id FROM businesses WHERE slug = ?",
+      "SELECT id FROM businesses WHERE slug = ? AND is_active = TRUE",
       [slug]
     );
 

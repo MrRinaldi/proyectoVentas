@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const pool = require("../config/db");
 
 module.exports = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -18,12 +19,35 @@ module.exports = (req, res, next) => {
   }
 };
 
-// Middleware para verificar que el usuario sea owner o admin
-const requireOwner = (req, res, next) => {
-  if (req.user.role !== 'owner' && req.user.role !== 'admin') {
+// Personal de una tienda (owner o admin) cuya tienda no está suspendida.
+// La suspensión se comprueba en cada petición para que tenga efecto inmediato,
+// sin esperar a que caduque el token.
+const requireStaff = async (req, res, next) => {
+  if ((req.user.role !== "owner" && req.user.role !== "admin") || !req.user.businessId) {
+    return res.status(403).json({ message: "Acceso denegado." });
+  }
+
+  try {
+    const [businesses] = await pool.query(
+      "SELECT is_active FROM businesses WHERE id = ?",
+      [req.user.businessId]
+    );
+    if (businesses.length === 0 || !businesses[0].is_active) {
+      return res.status(403).json({ message: "Esta tienda está suspendida." });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Superadministrador de la plataforma.
+const requireSuperadmin = (req, res, next) => {
+  if (req.user.role !== "superadmin") {
     return res.status(403).json({ message: "Acceso denegado." });
   }
   next();
 };
 
-module.exports.requireOwner = requireOwner;
+module.exports.requireStaff = requireStaff;
+module.exports.requireSuperadmin = requireSuperadmin;

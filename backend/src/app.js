@@ -12,6 +12,7 @@ const businessRoutes = require("./routes/business.routes");
 
 const authMiddleware = require("./middlewares/auth.middleware");
 const storeRoutes = require("./routes/store.routes");
+const adminRoutes = require("./routes/admin.routes");
 
 app.use(cors());
 app.use(express.json());
@@ -45,6 +46,7 @@ app.use("/api/products", productsRoutes);
 app.use("/api/businesses", businessRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/store", storeRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Último recurso para errores no capturados (p. ej. JSON mal formado): responde con un mensaje
 // genérico. Sin esto, Express devuelve la traza interna del error al cliente.

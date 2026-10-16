@@ -67,11 +67,15 @@ CREATE TABLE products (
 CREATE TABLE order_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
-    product_id INT NOT NULL,
+    product_id INT NULL,
+    -- Copia del nombre al hacer el pedido: el historial no cambia si el producto se edita o se borra.
+    product_name VARCHAR(150) COLLATE utf8mb4_unicode_ci,
     quantity INT NOT NULL,
     price DECIMAL(10,2) NOT NULL,
+    -- Opciones elegidas por el cliente, p. ej. {"meatCount": 2} en hamburguesas.
+    options JSON NULL,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    CONSTRAINT fk_order_items_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
 );
 
 -- =====================================
@@ -182,3 +186,11 @@ INSERT INTO order_items (order_id, product_id, quantity, price) VALUES
 (7, 20, 1, 89.99),
 (8, 19, 1, 89.99),
 (9, 23, 1, 45.00);
+
+-- Copia el nombre del producto en las líneas de los pedidos de ejemplo.
+UPDATE order_items oi JOIN products p ON p.id = oi.product_id SET oi.product_name = p.name;
+
+-- Tipos de producto de la tienda de comidas (iconos, colores y opciones como la cantidad de carnes).
+UPDATE products SET product_type = 'burger' WHERE business_id = 2 AND category_id = 5;
+UPDATE products SET product_type = 'drink' WHERE business_id = 2 AND category_id = 7;
+UPDATE products SET product_type = 'dessert' WHERE business_id = 2 AND category_id = 8;

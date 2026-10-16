@@ -159,7 +159,10 @@ function Orders() {
                   <div className="space-y-1">
                     {order.items.map(item => (
                       <div key={item.id} className="flex justify-between text-sm">
-                        <span>{item.product_name} x{item.quantity}</span>
+                        <span>
+                          {item.product_name} x{item.quantity}
+                          {item.options?.meatCount && ` · ${item.options.meatCount} carne${item.options.meatCount > 1 ? 's' : ''}`}
+                        </span>
                         <span>${(item.price * item.quantity).toFixed(2)}</span>
                       </div>
                     ))}

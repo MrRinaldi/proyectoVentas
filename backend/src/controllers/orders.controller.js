@@ -37,7 +37,8 @@ exports.getOrders = async (req, res) => {
             'product_id', oi.product_id,
             'quantity', oi.quantity,
             'price', oi.price,
-            'product_name', p.name
+            'product_name', COALESCE(oi.product_name, p.name),
+            'options', oi.options
           )
         ) as items
       FROM orders o
@@ -109,7 +110,8 @@ exports.updateOrderStatus = async (req, res) => {
             o.*,
             JSON_ARRAYAGG(
               JSON_OBJECT(
-                'product_name', p.name,
+                'product_name', COALESCE(oi.product_name, p.name),
+                'options', oi.options,
                 'quantity', oi.quantity,
                 'price', oi.price
               )
@@ -153,14 +155,48 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
+const MAX_ITEMS = 100;
+const MAX_QUANTITY = 999;
+const MAX_MEAT_COUNT = 4;
+// "+54 11 5555-1234", "1155551234"...: dígitos, espacios y guiones, con "+" opcional al inicio.
+const PHONE_PATTERN = /^\+?[0-9][0-9 -]{5,18}$/;
+
+// Devuelve un mensaje de error si los datos del pedido no son válidos, o null si lo son.
+function validateOrderInput({ customerName, customerPhone, items }) {
+  if (typeof customerName !== "string" || !customerName.trim() || customerName.trim().length > 150) {
+    return "Nombre del cliente no válido";
+  }
+  if (typeof customerPhone !== "string" || !PHONE_PATTERN.test(customerPhone.trim())) {
+    return "Teléfono no válido";
+  }
+  if (!Array.isArray(items) || items.length === 0 || items.length > MAX_ITEMS) {
+    return `El pedido debe tener entre 1 y ${MAX_ITEMS} productos`;
+  }
+  for (const item of items) {
+    const { productId, quantity, meatCount } = item || {};
+    if (!Number.isInteger(productId) || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
+      return "Datos de producto inválidos";
+    }
+    if (meatCount != null && (!Number.isInteger(meatCount) || meatCount < 1 || meatCount > MAX_MEAT_COUNT)) {
+      return "Opciones de producto inválidas";
+    }
+  }
+  return null;
+}
+
 exports.createOrder = async (req, res) => {
+  let connection;
   try {
     const { slug } = req.params;
-    const { customerName, customerPhone, items } = req.body;
 
-    if (!customerName || !customerPhone || !items || items.length === 0) {
-      return res.status(400).json({ message: "Faltan datos del pedido" });
+    const validationError = validateOrderInput(req.body);
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
     }
+
+    const customerName = req.body.customerName.trim();
+    const customerPhone = req.body.customerPhone.trim();
+    const { items } = req.body;
 
     // Obtener el business_id desde el slug
     const [businesses] = await pool.query(
@@ -174,50 +210,60 @@ exports.createOrder = async (req, res) => {
 
     const businessId = businesses[0].id;
 
-    // Calcular el total y validar productos
-    let total = 0;
+    // Precio y nombre salen de la BD, nunca del cliente. El total se suma en céntimos
+    // para evitar errores de redondeo de los decimales (p. ej. 2.9699999999999998).
+    let totalCents = 0;
     const orderItems = [];
 
     for (const item of items) {
-      if (!item.productId || !item.quantity || item.quantity <= 0) {
-        return res.status(400).json({ message: "Datos de producto inválidos" });
-      }
-
       const [products] = await pool.query(
-        "SELECT id, name, price FROM products WHERE id = ? AND business_id = ? AND is_active = TRUE",
+        "SELECT id, name, price, product_type FROM products WHERE id = ? AND business_id = ? AND is_active = TRUE",
         [item.productId, businessId]
       );
 
       if (products.length === 0) {
-        return res.status(400).json({ message: `Producto ${item.productId} no encontrado` });
+        return res.status(400).json({ message: "Uno de los productos ya no está disponible" });
       }
 
       const product = products[0];
-      const itemTotal = product.price * item.quantity;
-      total += itemTotal;
+      totalCents += Math.round(Number(product.price) * 100) * item.quantity;
+
+      // La cantidad de carnes solo tiene sentido en hamburguesas; en el resto se ignora.
+      const options = product.product_type === "burger" && item.meatCount
+        ? { meatCount: item.meatCount }
+        : null;
 
       orderItems.push({
         productId: product.id,
+        productName: product.name,
         quantity: item.quantity,
-        price: product.price
+        price: product.price,
+        options,
       });
     }
 
-    // Crear la orden
-    const [orderResult] = await pool.query(
+    const total = totalCents / 100;
+
+    // Pedido y líneas en una transacción: o se guarda todo o nada.
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    const [orderResult] = await connection.query(
       "INSERT INTO orders (business_id, customer_name, customer_phone, total, status) VALUES (?, ?, ?, ?, 'pending')",
       [businessId, customerName, customerPhone, total]
     );
 
     const orderId = orderResult.insertId;
 
-    // Crear los items de la orden
     for (const item of orderItems) {
-      await pool.query(
-        "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)",
-        [orderId, item.productId, item.quantity, item.price]
+      await connection.query(
+        "INSERT INTO order_items (order_id, product_id, product_name, quantity, price, options) VALUES (?, ?, ?, ?, ?, ?)",
+        [orderId, item.productId, item.productName, item.quantity, item.price,
+          item.options ? JSON.stringify(item.options) : null]
       );
     }
+
+    await connection.commit();
 
     res.status(201).json({
       message: "Pedido creado correctamente",
@@ -229,7 +275,10 @@ exports.createOrder = async (req, res) => {
     });
 
   } catch (error) {
+    if (connection) await connection.rollback().catch(() => {});
     console.error(error);
     res.status(500).json({ message: "Error creando el pedido" });
+  } finally {
+    if (connection) connection.release();
   }
 };

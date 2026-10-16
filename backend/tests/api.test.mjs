@@ -1,6 +1,6 @@
 // Pruebas de la API contra la aplicación levantada con docker compose y los datos de init.sql.
 // Uso (desde backend/): npm test      Otra URL: API_URL=http://otro:3001 npm test
-// Modifican datos de prueba (crean un pedido y cambian el estado del pedido 3): usar solo en desarrollo.
+// Modifican datos de prueba (crean pedidos y cambian el estado del pedido 3): usar solo en desarrollo.
 import crypto from "node:crypto";
 
 const API = process.env.API_URL || "http://localhost:3001";
@@ -78,6 +78,46 @@ r = await call("POST", "/api/store/la-tienda-del-barrio/orders", {
   body: { customerName: "Prueba", customerPhone: "+34600000000", items: [{ productId: 1, quantity: 2, price: 0.01 }] },
 });
 check("Crear pedido (checkout)", r.status === 201 && Number(r.data.order?.total) === 5, `status ${r.status}, total ${r.data?.order?.total}`);
+
+// --- Pedidos: validación, redondeo, opciones e historial
+const order = (slug, items, extra = {}) =>
+  call("POST", `/api/store/${slug}/orders`, { body: { customerName: "Prueba", customerPhone: "+54 11 5555-1234", items, ...extra } });
+
+r = await order("la-tienda-del-barrio", [{ productId: 1, quantity: 0.4 }]);
+check("Cantidad con decimales rechazada", r.status === 400, `status ${r.status}`);
+
+r = await order("la-tienda-del-barrio", [{ productId: 1, quantity: "2" }]);
+check("Cantidad como texto rechazada", r.status === 400, `status ${r.status}`);
+
+r = await order("la-tienda-del-barrio", [{ productId: 1, quantity: 1 }], { customerPhone: "abc" });
+check("Teléfono no válido rechazado", r.status === 400, `status ${r.status} ${r.data?.message ?? ""}`);
+
+r = await order("la-tienda-del-barrio", [{ productId: 4, quantity: 3 }]);
+check("Total sin errores de redondeo (1.45 x 3)", r.status === 201 && r.data.order.total === 4.35, `total ${r.data?.order?.total}`);
+
+const rawRes = await fetch(`${API}/api/store/la-tienda-del-barrio/orders`, {
+  method: "POST", headers: { "Content-Type": "application/json" }, body: "{mal json",
+});
+const rawText = await rawRes.text();
+check("JSON mal formado: 400 sin traza interna", rawRes.status === 400 && !rawText.includes("at "), `status ${rawRes.status} ${rawText.slice(0, 60)}`);
+
+r = await order("comidas-don-jorge", [{ productId: 10, quantity: 1, meatCount: 2 }, { productId: 12, quantity: 1, meatCount: 3 }]);
+const burgerOrderId = r.data?.order?.id;
+const jorgeToken = (await call("POST", "/api/auth/login", { body: { email: "owner@comidas.com", password: "password123" } })).data?.token;
+const jorgeOrders = (await call("GET", "/api/store/comidas-don-jorge/orders", { token: jorgeToken })).data?.orders || [];
+const burgerOrder = jorgeOrders.find((o) => o.id === burgerOrderId);
+const burgerLine = burgerOrder?.items.find((i) => i.product_name === "Hamburguesa Clásica");
+const pizzaLine = burgerOrder?.items.find((i) => i.product_name === "Pizza Margarita");
+check("Cantidad de carnes guardada en hamburguesas", burgerLine?.options?.meatCount === 2, JSON.stringify(burgerLine?.options));
+check("Cantidad de carnes ignorada en otros productos", pizzaLine && pizzaLine.options === null, JSON.stringify(pizzaLine?.options));
+
+await call("POST", "/api/products", { token, body: { name: "Producto temporal", price: 3, is_active: true } });
+const temp = (await call("GET", "/api/products", { token })).data.find((p) => p.name === "Producto temporal");
+const tempOrderId = (await order("la-tienda-del-barrio", [{ productId: temp.id, quantity: 2 }])).data?.order?.id;
+await call("DELETE", `/api/products/${temp.id}`, { token });
+const tempOrder = (await call("GET", "/api/store/la-tienda-del-barrio/orders", { token })).data?.orders.find((o) => o.id === tempOrderId);
+check("Borrar un producto no borra su historial", tempOrder?.items[0]?.product_name === "Producto temporal" && tempOrder.items[0].quantity === 2,
+  JSON.stringify(tempOrder?.items[0]));
 
 // --- Token falsificado con el secreto filtrado
 {

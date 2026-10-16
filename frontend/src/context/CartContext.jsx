@@ -1,16 +1,39 @@
-import { createContext, useState } from "react";
+import { createContext, useCallback, useEffect, useState } from "react";
 
 export const CartContext = createContext();
 
+// Cada tienda tiene su propio carrito, guardado en el navegador para que no se pierda al recargar.
+const cartStorageKey = (slug) => `cart:${slug}`;
+
+function readStoredCart(slug) {
+  try {
+    const items = JSON.parse(localStorage.getItem(cartStorageKey(slug)) || "[]");
+    return Array.isArray(items) ? items : [];
+  } catch {
+    return [];
+  }
+}
+
 export function CartProvider({ children }) {
+  const [storeSlug, setStoreSlug] = useState(null);
   const [cart, setCart] = useState([]);
 
-  const addToCart = (product, quantity = 1) => {
-    // Crear una clave única considerando el meatCount si existe
-    const itemKey = product.meatCount 
-      ? `${product.id}-meat${product.meatCount}`
-      : product.id;
+  // Lo llama StoreHeader al entrar en una tienda: carga el carrito de esa tienda.
+  const selectStore = useCallback((slug) => {
+    setStoreSlug(slug);
+    setCart(readStoredCart(slug));
+  }, []);
 
+  useEffect(() => {
+    if (!storeSlug) return;
+    try {
+      localStorage.setItem(cartStorageKey(storeSlug), JSON.stringify(cart));
+    } catch {
+      // Sin almacenamiento disponible (modo privado): el carrito sigue funcionando en memoria.
+    }
+  }, [storeSlug, cart]);
+
+  const addToCart = (product, quantity = 1) => {
     const existing = cart.find(item => 
       product.meatCount 
         ? item.id === product.id && item.meatCount === product.meatCount
@@ -78,7 +101,8 @@ export function CartProvider({ children }) {
     try {
       const items = cart.map(item => ({
         productId: item.id,
-        quantity: item.quantity
+        quantity: item.quantity,
+        meatCount: item.meatCount || null
       }));
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/store/${slug}/orders`, {
@@ -111,6 +135,7 @@ export function CartProvider({ children }) {
   return (
     <CartContext.Provider value={{
   cart,
+  selectStore,
   addToCart,
   removeFromCart,
   increaseQuantity,

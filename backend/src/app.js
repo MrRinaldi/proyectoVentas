@@ -46,5 +46,15 @@ app.use("/api/businesses", businessRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/store", storeRoutes);
 
+// Último recurso para errores no capturados (p. ej. JSON mal formado): responde con un mensaje
+// genérico. Sin esto, Express devuelve la traza interna del error al cliente.
+app.use((err, req, res, next) => {
+  if (err.type === "entity.parse.failed") {
+    return res.status(400).json({ message: "JSON inválido" });
+  }
+  console.error(err);
+  res.status(err.status && err.status < 500 ? err.status : 500).json({ message: "Error del servidor" });
+});
+
 module.exports = app;
 

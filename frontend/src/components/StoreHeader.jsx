@@ -1,15 +1,19 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import MiniCart from "./MiniCart";
 
 function StoreHeader({ business }) {
-  const { cart, total, toggleCart } = useContext(CartContext);
+  const { selectStore } = useContext(CartContext);
   const { user, isOwner, logout } = useAuth();
   const { slug } = useParams();
   const navigate = useNavigate();
-  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+
+  // Todas las páginas de una tienda muestran esta cabecera: aquí se carga el carrito de esa tienda.
+  useEffect(() => {
+    selectStore(slug);
+  }, [slug, selectStore]);
 
   const handleLogout = () => {
     logout();

@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { CartContext } from "../context/CartContext";
 import { getImageUrl, showPlaceholderOnError } from "../utils/images";
+import { formatPrice } from "../utils/money";
 
 // Función para obtener ícono según tipo de producto
 function getProductIcon(productType) {
@@ -26,7 +27,7 @@ function getProductColor(productType) {
   return colors[productType] || colors.other;
 }
 
-function BurgerProductCard({ product }) {
+function BurgerProductCard({ product, business }) {
   const { addToCart } = useContext(CartContext);
   const [quantity, setQuantity] = useState(1);
   const [meatCount, setMeatCount] = useState(1);
@@ -81,7 +82,7 @@ function BurgerProductCard({ product }) {
         {/* Precio */}
         <div className="my-3 border-t pt-3">
           <span className="text-3xl font-bold text-orange-600">
-            ${product.price}
+            {formatPrice(product.price, business)}
           </span>
         </div>
 

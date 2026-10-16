@@ -41,8 +41,11 @@ Cada fase: cambios mínimos, ampliar `backend/tests/api.test.mjs`, probar en nav
   `requireSuperadmin` en `/api/admin`; `businesses.is_active` (suspendida = oculta al público, sin pedidos
   ni acceso de su personal); panel `/admin` (listar, crear tienda + su administrador, suspender/reactivar);
   crear tienda ya no es público; script `backend/scripts/create-superadmin.js`; migración 004.
-- **Fase 8 — Configuración por tienda:** moneda, locale, color, logo y WhatsApp; pantalla "Mi tienda";
-  `formatPrice` en catálogo, carrito, pedidos y panel; gestión de categorías.
+- **Fase 8 — Configuración por tienda (hecha):** `businesses.currency`/`locale` y `orders.currency`
+  (migración 005); validación común en `backend/src/utils/businessSettings.js`; "Mi tienda"
+  (`/:slug/settings`, API `/api/businesses/mine`) y "Configurar" en `/admin` (API `PUT /api/admin/businesses/:id`,
+  también cambia el tipo) con el mismo `StoreSettingsForm`; `formatPrice` en catálogo, carrito, checkout,
+  pedidos, gestión y WhatsApp; color de marca y logo en la cabecera; gestión de categorías (`CategoryManager`).
 - **Fase 9 — Clientes finales:** registro/login por tienda, pedidos vinculados al cliente, "Mis pedidos",
   y lista de clientes para el administrador de la tienda.
 - **Fase 10 — Tienda configurable por tipo:** una sola página de tienda y una sola tarjeta de producto
@@ -105,6 +108,12 @@ Pendientes:
 reciben 401 de la API llaman a `logout()`, y su efecto las redirige al login.
 El carrito es por tienda: `StoreHeader` llama a `selectStore(slug)` y `CartContext` guarda cada carrito en
 `localStorage` con la clave `cart:<slug>`.
+
+## Moneda y marca en el frontend
+- Importes: siempre `formatPrice(importe, tienda)` de `src/utils/money.js` (nunca "$" a mano). La tienda
+  (`currency`, `locale`) llega como prop `business` desde la página; un pedido usa su propia `currency`.
+- Color de marca: `StoreLayout` define `--brand` con `businesses.primary_color`; usar `bg-[var(--brand)]`,
+  `text-[var(--brand)]`, etc. La tarjeta de hamburguesas aún usa colores por tipo de producto (fase 10).
 
 ## Pruebas
 `backend/tests/api.test.mjs` (sin dependencias): con `docker compose up -d`, ejecutar `npm test` en `backend/`.

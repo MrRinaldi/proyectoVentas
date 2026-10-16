@@ -8,6 +8,7 @@ router.use(authMiddleware, authMiddleware.requireSuperadmin);
 
 router.get("/businesses", adminController.listBusinesses);
 router.post("/businesses", adminController.createBusiness);
+router.put("/businesses/:id", adminController.updateBusiness);
 router.patch("/businesses/:id/status", adminController.setBusinessStatus);
 
 module.exports = router;

@@ -1,10 +1,9 @@
 // Panel del superadministrador: gestión de todas las tiendas de la plataforma.
 const pool = require("../config/db");
 const bcrypt = require("bcryptjs");
+const { parseBusinessSettings, STORE_TYPES, PHONE_PATTERN } = require("../utils/businessSettings");
 
-const STORE_TYPES = ["food", "grocery", "perfumery"];
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_PATTERN = /^\+?[0-9][0-9 -]{5,18}$/;
 // URLs del frontend que una tienda no puede usar como slug.
 const RESERVED_SLUGS = ["admin", "login", "api"];
 
@@ -50,7 +49,8 @@ exports.listBusinesses = async (req, res) => {
   try {
     const [businesses] = await pool.query(`
       SELECT
-        b.id, b.name, b.slug, b.type, b.whatsapp_number, b.phone, b.is_active, b.created_at,
+        b.id, b.name, b.slug, b.type, b.logo, b.primary_color, b.whatsapp_number, b.phone,
+        b.currency, b.locale, b.is_active, b.created_at,
         (SELECT u.email FROM users u WHERE u.business_id = b.id AND u.role = 'owner' ORDER BY u.id LIMIT 1) AS owner_email,
         (SELECT COUNT(*) FROM products p WHERE p.business_id = b.id) AS product_count,
         (SELECT COUNT(*) FROM orders o WHERE o.business_id = b.id) AS order_count
@@ -118,6 +118,33 @@ exports.createBusiness = async (req, res) => {
     res.status(500).json({ message: "Error creando la tienda" });
   } finally {
     if (connection) connection.release();
+  }
+};
+
+// Configuración de cualquier tienda (las mismas reglas que "Mi tienda", más el tipo de tienda).
+exports.updateBusiness = async (req, res) => {
+  try {
+    const { error, settings } = parseBusinessSettings(req.body, { allowType: true });
+    if (error) {
+      return res.status(400).json({ message: error });
+    }
+
+    const [result] = await pool.query(
+      `UPDATE businesses
+       SET name = ?, type = ?, logo = ?, primary_color = ?, whatsapp_number = ?, phone = ?, currency = ?, locale = ?
+       WHERE id = ?`,
+      [settings.name, settings.type, settings.logo, settings.primary_color, settings.whatsapp_number,
+        settings.phone, settings.currency, settings.locale, req.params.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Tienda no encontrada" });
+    }
+
+    res.json({ message: "Configuración guardada" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error guardando la configuración" });
   }
 };
 

@@ -29,6 +29,7 @@ exports.getOrders = async (req, res) => {
         o.customer_name,
         o.customer_phone,
         o.total,
+        o.currency,
         o.status,
         o.created_at,
         JSON_ARRAYAGG(
@@ -200,7 +201,7 @@ exports.createOrder = async (req, res) => {
 
     // Obtener el business_id desde el slug
     const [businesses] = await pool.query(
-      "SELECT id FROM businesses WHERE slug = ? AND is_active = TRUE",
+      "SELECT id, currency FROM businesses WHERE slug = ? AND is_active = TRUE",
       [slug]
     );
 
@@ -208,7 +209,7 @@ exports.createOrder = async (req, res) => {
       return res.status(404).json({ message: "Tienda no encontrada" });
     }
 
-    const businessId = businesses[0].id;
+    const { id: businessId, currency } = businesses[0];
 
     // Precio y nombre salen de la BD, nunca del cliente. El total se suma en céntimos
     // para evitar errores de redondeo de los decimales (p. ej. 2.9699999999999998).
@@ -249,8 +250,8 @@ exports.createOrder = async (req, res) => {
     await connection.beginTransaction();
 
     const [orderResult] = await connection.query(
-      "INSERT INTO orders (business_id, customer_name, customer_phone, total, status) VALUES (?, ?, ?, ?, 'pending')",
-      [businessId, customerName, customerPhone, total]
+      "INSERT INTO orders (business_id, customer_name, customer_phone, total, currency, status) VALUES (?, ?, ?, ?, ?, 'pending')",
+      [businessId, customerName, customerPhone, total, currency]
     );
 
     const orderId = orderResult.insertId;
@@ -270,6 +271,7 @@ exports.createOrder = async (req, res) => {
       order: {
         id: orderId,
         total: total,
+        currency,
         status: 'pending'
       }
     });

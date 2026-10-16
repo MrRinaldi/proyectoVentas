@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import StoreList from "./pages/StoreList";
 import ProductManagement from "./pages/ProductManagement";
 import AdminPanel from "./pages/AdminPanel";
+import StoreSettings from "./pages/StoreSettings";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/:slug/burger" element={<StoreBurger />} />
         <Route path="/:slug/orders" element={<Orders />} />
         <Route path="/:slug/products" element={<ProductManagement />} />
+        <Route path="/:slug/settings" element={<StoreSettings />} />
       </Routes>
     </AuthProvider>
   );

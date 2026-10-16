@@ -1,6 +1,6 @@
 import BurgerProductCard from "./BurgerProductCard";
 
-function BurgerProductList({ products }) {
+function BurgerProductList({ products, business }) {
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -15,7 +15,7 @@ function BurgerProductList({ products }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {products.map((product) => (
-        <BurgerProductCard key={product.id} product={product} />
+        <BurgerProductCard key={product.id} product={product} business={business} />
       ))}
     </div>
   );

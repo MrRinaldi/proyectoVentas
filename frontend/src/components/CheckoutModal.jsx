@@ -1,8 +1,9 @@
 import { useContext, useState } from "react";
+import { formatPrice } from "../utils/money";
 import { useParams } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 
-function CheckoutModal({ isOpen, onClose }) {
+function CheckoutModal({ isOpen, onClose, business }) {
   const { cart, checkout, total } = useContext(CartContext);
   const { slug } = useParams();
   const [customerName, setCustomerName] = useState('');
@@ -58,12 +59,12 @@ function CheckoutModal({ isOpen, onClose }) {
                 {cart.map(item => (
                   <div key={item.id} className="flex justify-between text-sm">
                     <span>{item.name} x{item.quantity}</span>
-                    <span>${(item.price * item.quantity).toFixed(2)}</span>
+                    <span>{formatPrice(item.price * item.quantity, business)}</span>
                   </div>
                 ))}
               </div>
               <div className="border-t pt-2 mt-2 font-semibold">
-                Total: ${total.toFixed(2)}
+                Total: {formatPrice(total, business)}
               </div>
             </div>
 
@@ -113,7 +114,7 @@ function CheckoutModal({ isOpen, onClose }) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="flex-1 bg-[var(--brand)] text-white py-2 px-4 rounded-md hover:opacity-90 transition-colors disabled:opacity-50"
                 >
                   {loading ? 'Procesando...' : 'Confirmar Pedido'}
                 </button>

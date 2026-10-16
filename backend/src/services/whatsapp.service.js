@@ -44,17 +44,21 @@ class WhatsAppService {
   }
 
   buildOrderMessage(business, order, customer) {
+    // Importes en la moneda del pedido y con el formato del idioma de la tienda.
+    const money = new Intl.NumberFormat(business.locale, { style: 'currency', currency: order.currency });
+    const formatPrice = (amount) => money.format(Number(amount));
+
     let message = `🛒 *Nuevo Pedido - ${business.name}*\n\n`;
     message += `👤 *Cliente:* ${customer.name}\n`;
     message += `📞 *Teléfono:* ${customer.phone}\n`;
-    message += `📅 *Fecha:* ${new Date(order.created_at).toLocaleString('es-ES')}\n\n`;
+    message += `📅 *Fecha:* ${new Date(order.created_at).toLocaleString(business.locale)}\n\n`;
     message += `📋 *Productos:*\n`;
 
     order.items.forEach(item => {
-      message += `• ${item.product_name} x${item.quantity} - $${(item.price * item.quantity).toFixed(2)}\n`;
+      message += `• ${item.product_name} x${item.quantity} - ${formatPrice(item.price * item.quantity)}\n`;
     });
 
-    message += `\n💰 *Total: $${order.total}*\n`;
+    message += `\n💰 *Total: ${formatPrice(order.total)}*\n`;
     message += `📍 *Estado:* ${this.getStatusText(order.status)}\n\n`;
     message += `✅ *Pedido confirmado y listo para preparación*`;
 

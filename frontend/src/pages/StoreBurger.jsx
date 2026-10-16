@@ -29,7 +29,7 @@ function StoreBurger() {
     : store.products;
 
   return (
-    <StoreLayout>
+    <StoreLayout business={store.business}>
       
       {/* Header */}
       <StoreHeader business={store.business} />
@@ -43,7 +43,7 @@ function StoreBurger() {
 
       {/* Productos */}
       <main className="p-4 md:p-8 bg-gray-50 min-h-screen">
-        <BurgerProductList products={filteredProducts} />
+        <BurgerProductList products={filteredProducts} business={store.business} />
       </main>
 
     </StoreLayout>

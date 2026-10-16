@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { formatPrice } from "../utils/money";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import StoreLayout from "../components/StoreLayout";
@@ -109,7 +110,7 @@ function Orders() {
   if (!store || loading) return <p className="p-4">Cargando...</p>;
 
   return (
-    <StoreLayout>
+    <StoreLayout business={store.business}>
       <StoreHeader business={store.business} />
 
       <div className="p-6">
@@ -150,7 +151,7 @@ function Orders() {
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
                       {getStatusText(order.status)}
                     </span>
-                    <p className="text-xl font-bold mt-2">${order.total}</p>
+                    <p className="text-xl font-bold mt-2">{formatPrice(order.total, { currency: order.currency, locale: store.business.locale })}</p>
                   </div>
                 </div>
 
@@ -163,7 +164,7 @@ function Orders() {
                           {item.product_name} x{item.quantity}
                           {item.options?.meatCount && ` · ${item.options.meatCount} carne${item.options.meatCount > 1 ? 's' : ''}`}
                         </span>
-                        <span>${(item.price * item.quantity).toFixed(2)}</span>
+                        <span>{formatPrice(item.price * item.quantity, { currency: order.currency, locale: store.business.locale })}</span>
                       </div>
                     ))}
                   </div>

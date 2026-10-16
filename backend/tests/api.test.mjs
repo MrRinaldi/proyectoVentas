@@ -37,7 +37,8 @@ function forgeToken(secret, payload) {
 
 // --- Público
 let r = await call("GET", "/api/businesses");
-check("Lista de tiendas", r.status === 200 && r.data.businesses?.length === 3, `status ${r.status}`);
+const seedSlugs = ["la-tienda-del-barrio", "comidas-don-jorge", "perfumeria-elegancia"];
+check("Lista de tiendas", r.status === 200 && seedSlugs.every((s) => r.data.businesses?.some((b) => b.slug === s)), `status ${r.status}, ${r.data?.businesses?.length} tiendas`);
 
 r = await call("GET", "/api/store/la-tienda-del-barrio");
 check("Página de una tienda", r.status === 200 && r.data.products?.length > 0, `status ${r.status}, ${r.data?.products?.length} productos`);
@@ -210,6 +211,68 @@ check("Dueño de tienda suspendida no puede iniciar sesión", r.status === 403, 
 r = await call("PATCH", `/api/admin/businesses/${newBusinessId}/status`, { token: superToken, body: { isActive: true } });
 const visibleAgain = (await call("GET", `/api/store/${newSlug}`)).status === 200;
 check("Superadmin reactiva la tienda", r.status === 200 && visibleAgain, `status ${r.status}, visible: ${visibleAgain}`);
+
+// --- Configuración por tienda y categorías (fase 8)
+const original = (await call("GET", "/api/businesses/mine", { token })).data?.business;
+check("Mi tienda: el administrador ve su configuración", !!original?.currency && original.slug === "la-tienda-del-barrio", `${original?.currency} ${original?.locale}`);
+
+// Valores tal como los envía el formulario (camelCase).
+const settingsOf = (b) => ({
+  name: b.name, logo: b.logo, primaryColor: b.primary_color, whatsappNumber: b.whatsapp_number,
+  phone: b.phone, currency: b.currency, locale: b.locale, type: b.type,
+});
+
+r = await call("PUT", "/api/businesses/mine", { token, body: { ...settingsOf(original), currency: "USD", locale: "en-US", primaryColor: "#123456", type: "perfumery" } });
+const store = (await call("GET", "/api/store/la-tienda-del-barrio")).data?.business;
+check("Mi tienda: cambiar moneda, idioma y color", r.status === 200 && store?.currency === "USD" && store.locale === "en-US" && store.primary_color === "#123456",
+  `status ${r.status}, ${store?.currency} ${store?.locale} ${store?.primary_color}`);
+check("El administrador de la tienda no cambia su tipo", store?.type === original.type, `tipo ${store?.type}`);
+
+r = await order("la-tienda-del-barrio", [{ productId: 1, quantity: 1 }]);
+const usdOrderId = r.data?.order?.id;
+check("El pedido guarda la moneda de la tienda", r.data?.order?.currency === "USD", `moneda ${r.data?.order?.currency}`);
+
+for (const [label, change] of [["moneda inexistente", { currency: "QQQ" }], ["color no válido", { primaryColor: "rojo" }],
+  ["logo no válido", { logo: "javascript:alert(1)" }], ["idioma no válido", { locale: "no válido!" }]]) {
+  r = await call("PUT", "/api/businesses/mine", { token, body: { ...settingsOf(original), ...change } });
+  check(`Mi tienda: ${label} rechazado`, r.status === 400, `status ${r.status} ${r.data?.message ?? ""}`);
+}
+
+r = await call("PUT", "/api/businesses/mine", { token: superToken, body: settingsOf(original) });
+check("Superadmin no usa Mi tienda (no tiene tienda)", r.status === 403, `status ${r.status}`);
+
+r = await call("PUT", "/api/businesses/mine", { token, body: settingsOf(original) });
+const oldOrder = (await call("GET", "/api/store/la-tienda-del-barrio/orders", { token })).data?.orders.find((o) => o.id === usdOrderId);
+check("Cambiar la moneda no altera pedidos anteriores", r.status === 200 && oldOrder?.currency === "USD", `pedido ${oldOrder?.currency}`);
+
+const barrioId = (await call("GET", "/api/admin/businesses", { token: superToken })).data.businesses.find((b) => b.slug === "la-tienda-del-barrio").id;
+r = await call("PUT", `/api/admin/businesses/${barrioId}`, { token: superToken, body: { ...settingsOf(original), type: "food" } });
+const typeChanged = (await call("GET", "/api/store/la-tienda-del-barrio")).data?.business?.type === "food";
+await call("PUT", `/api/admin/businesses/${barrioId}`, { token: superToken, body: settingsOf(original) });
+check("Superadmin configura una tienda (incluido el tipo)", r.status === 200 && typeChanged, `status ${r.status}`);
+
+r = await call("PUT", `/api/admin/businesses/${barrioId}`, { token, body: settingsOf(original) });
+check("Administrador de tienda no usa la configuración del panel", r.status === 403, `status ${r.status}`);
+
+r = await call("POST", "/api/categories", { token, body: { name: "  Categoría temporal  " } });
+const tempCategoryId = r.data?.category?.id;
+check("Crear categoría", r.status === 201 && r.data.category?.name === "Categoría temporal", `status ${r.status}`);
+
+r = await call("POST", "/api/categories", { token, body: { name: "   " } });
+check("Categoría sin nombre rechazada", r.status === 400, `status ${r.status}`);
+
+r = await call("PUT", "/api/categories/5", { token, body: { name: "Hackeada" } });
+const r2 = await call("DELETE", "/api/categories/5", { token });
+check("No se modifica ni borra una categoría de otra tienda", r.status === 404 && r2.status === 404, `${r.status} / ${r2.status}`);
+
+r = await call("PUT", `/api/categories/${tempCategoryId}`, { token, body: { name: "Categoría renombrada" } });
+check("Renombrar categoría", r.status === 200, `status ${r.status}`);
+
+await call("POST", "/api/products", { token, body: { name: "Producto en categoría temporal", price: 2, category_id: tempCategoryId } });
+r = await call("DELETE", `/api/categories/${tempCategoryId}`, { token });
+const orphan = (await call("GET", "/api/products", { token })).data.find((p) => p.name === "Producto en categoría temporal");
+check("Borrar categoría deja sus productos sin categoría", r.status === 200 && orphan && orphan.category_id === null, `status ${r.status}, category_id ${orphan?.category_id}`);
+if (orphan) await call("DELETE", `/api/products/${orphan.id}`, { token });
 
 for (const t of results) console.log(`${t.ok ? "OK   " : "FALLA"} ${t.name}  (${t.detail})`);
 

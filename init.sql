@@ -15,6 +15,9 @@ CREATE TABLE businesses (
     primary_color VARCHAR(20),
     whatsapp_number VARCHAR(20),
     phone VARCHAR(20),
+    -- Moneda (código ISO 4217) e idioma/región (BCP 47) con los que la tienda muestra los importes.
+    currency CHAR(3) NOT NULL DEFAULT 'ARS',
+    locale VARCHAR(20) NOT NULL DEFAULT 'es-AR',
     -- FALSE = tienda suspendida por el superadministrador: no se muestra ni acepta pedidos.
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -61,6 +64,8 @@ CREATE TABLE products (
     customer_name VARCHAR(150) NOT NULL COLLATE utf8mb4_unicode_ci,
     customer_phone VARCHAR(20) NOT NULL,
     total DECIMAL(10,2) NOT NULL,
+    -- Moneda de la tienda al hacer el pedido: no cambia aunque la tienda cambie de moneda después.
+    currency CHAR(3) NOT NULL DEFAULT 'ARS',
     status ENUM('pending','confirmed','delivered','cancelled') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
@@ -92,6 +97,9 @@ INSERT INTO businesses (name, slug, type, logo, primary_color, whatsapp_number, 
 ('La Tienda del Barrio', 'la-tienda-del-barrio', 'grocery', '/api/images/tienda-logo.png', '#FF6B6B', '+34612345678', '+34612345678'),
 ('Comidas Rápidas Don Jorge', 'comidas-don-jorge', 'food', '/api/images/don-jorge-logo.png', '#4ECDC4', '+34612345679', '+34612345679'),
 ('Perfumería Elegancia', 'perfumeria-elegancia', 'perfumery', '/api/images/elegancia-logo.png', '#95E1D3', '+34612345680', '+34612345680');
+-- Monedas de ejemplo (por defecto ARS / es-AR).
+UPDATE businesses SET currency = 'EUR', locale = 'es-ES' WHERE slug IN ('la-tienda-del-barrio', 'comidas-don-jorge');
+UPDATE businesses SET currency = 'USD', locale = 'en-US' WHERE slug = 'perfumeria-elegancia';
 
 -- =====================================
 -- TABLA: usuarios
@@ -199,3 +207,6 @@ UPDATE order_items oi JOIN products p ON p.id = oi.product_id SET oi.product_nam
 UPDATE products SET product_type = 'burger' WHERE business_id = 2 AND category_id = 5;
 UPDATE products SET product_type = 'drink' WHERE business_id = 2 AND category_id = 7;
 UPDATE products SET product_type = 'dessert' WHERE business_id = 2 AND category_id = 8;
+
+-- Los pedidos de ejemplo usan la moneda de su tienda.
+UPDATE orders o JOIN businesses b ON b.id = o.business_id SET o.currency = b.currency;

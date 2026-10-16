@@ -1,4 +1,5 @@
 import { useContext, useState, useRef, useEffect } from "react";
+import { formatPrice } from "../utils/money";
 import { CartContext } from "../context/CartContext";
 import CheckoutModal from "./CheckoutModal";
 
@@ -14,7 +15,7 @@ function getProductIcon(productType) {
   return icons[productType] || icons.other;
 }
 
-function MiniCart() {
+function MiniCart({ business }) {
 
   const {
     cart,
@@ -56,7 +57,7 @@ function MiniCart() {
 
       <button
         onClick={() => setOpen(!open)}
-        className="relative bg-black text-white px-4 py-2 rounded-lg"
+        className="relative bg-[var(--brand)] text-white px-4 py-2 rounded-lg hover:opacity-90"
       >
         🛒
 
@@ -108,7 +109,7 @@ function MiniCart() {
                 )}
 
                 <span className="text-gray-500">
-                  ${item.price}
+                  {formatPrice(item.price, business)}
                 </span>
 
               </div>
@@ -147,7 +148,7 @@ function MiniCart() {
 
 
           <div className="border-t pt-3 mt-3 font-semibold">
-            Total: ${total}
+            Total: {formatPrice(total, business)}
           </div>
 
 
@@ -156,7 +157,7 @@ function MiniCart() {
               setOpen(false);
               setCheckoutOpen(true);
             }}
-            className="w-full mt-3 bg-black text-white py-2 rounded-lg"
+            className="w-full mt-3 bg-[var(--brand)] text-white py-2 rounded-lg hover:opacity-90"
           >
             Finalizar compra
           </button>
@@ -168,6 +169,7 @@ function MiniCart() {
       <CheckoutModal
         isOpen={checkoutOpen}
         onClose={() => setCheckoutOpen(false)}
+        business={business}
       />
 
     </div>

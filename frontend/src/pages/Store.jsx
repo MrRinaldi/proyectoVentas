@@ -30,7 +30,7 @@ function Store() {
     : store.products;
 
   return (
-    <StoreLayout>
+    <StoreLayout business={store.business}>
 
       <StoreHeader business={store.business} />
 
@@ -58,7 +58,7 @@ function Store() {
 
         {/* PRODUCTOS */}
         <main className="flex-1 p-3 md:p-6">
-          <ProductList products={filteredProducts} />
+          <ProductList products={filteredProducts} business={store.business} />
         </main>
 
       </div>

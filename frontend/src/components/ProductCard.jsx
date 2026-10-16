@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { CartContext } from "../context/CartContext";
 import { getImageUrl, showPlaceholderOnError } from "../utils/images";
+import { formatPrice } from "../utils/money";
 
 // Función para obtener ícono según tipo de producto
 function getProductIcon(productType) {
@@ -26,7 +27,7 @@ function getProductColor(productType) {
   return colors[productType] || colors.other;
 }
 
-function ProductCard({ product }) {
+function ProductCard({ product, business }) {
   const { addToCart } = useContext(CartContext);
   const [showOptions, setShowOptions] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -62,8 +63,8 @@ function ProductCard({ product }) {
       </div>
 
       <div className="mt-4 flex items-center justify-between">
-        <span className="text-xl font-bold text-green-600">
-          ${product.price}
+        <span className="text-xl font-bold text-[var(--brand)]">
+          {formatPrice(product.price, business)}
         </span>
 
         <button
@@ -122,7 +123,7 @@ function ProductCard({ product }) {
           <div className="flex gap-2">
             <button
               onClick={handleAddToCart}
-              className="flex-1 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition text-sm font-semibold"
+              className="flex-1 bg-[var(--brand)] text-white px-3 py-2 rounded hover:opacity-90 transition text-sm font-semibold"
             >
               Confirmar
             </button>

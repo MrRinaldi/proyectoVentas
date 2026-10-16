@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import StoreSettingsForm from "../components/StoreSettingsForm";
 
 const API = `${import.meta.env.VITE_API_URL}/api/admin`;
 
@@ -28,6 +29,7 @@ function AdminPanel() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null); // { type: "ok" | "error", text }
+  const [editingBusiness, setEditingBusiness] = useState(null);
 
   // fetch con el token; si la sesión ya no es válida, cierra sesión (y el efecto lleva al login).
   const adminFetch = useCallback(async (path, options = {}) => {
@@ -85,6 +87,11 @@ function AdminPanel() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const saveSettings = async (values) => {
+    const data = await adminFetch(`/businesses/${editingBusiness.id}`, { method: "PUT", body: JSON.stringify(values) });
+    if (data) loadBusinesses();
   };
 
   const toggleStatus = async (business) => {
@@ -175,6 +182,19 @@ function AdminPanel() {
           </form>
         </section>
 
+        {editingBusiness && (
+          <section className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border-2 border-blue-200">
+            <h2 className="text-lg font-semibold mb-4">Configurar: {editingBusiness.name}</h2>
+            <StoreSettingsForm
+              key={editingBusiness.id}
+              business={editingBusiness}
+              showType
+              onSave={saveSettings}
+              onCancel={() => setEditingBusiness(null)}
+            />
+          </section>
+        )}
+
         <section className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
           <h2 className="text-lg font-semibold mb-4">Tiendas ({businesses.length})</h2>
           {loading ? (
@@ -214,7 +234,11 @@ function AdminPanel() {
                           {business.is_active ? "Activa" : "Suspendida"}
                         </span>
                       </td>
-                      <td className="py-2 text-right">
+                      <td className="py-2 text-right whitespace-nowrap">
+                        <button onClick={() => setEditingBusiness(business)}
+                          className="text-xs px-3 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 mr-2">
+                          Configurar
+                        </button>
                         <button onClick={() => toggleStatus(business)}
                           className={`text-xs px-3 py-1 rounded ${business.is_active
                             ? "bg-red-50 text-red-700 hover:bg-red-100" : "bg-green-50 text-green-700 hover:bg-green-100"}`}>

@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { formatPrice } from "../utils/money";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import StoreLayout from "../components/StoreLayout";
 import StoreHeader from "../components/StoreHeader";
+import CategoryManager from "../components/CategoryManager";
 
 const initialForm = {
   name: "",
@@ -204,7 +206,7 @@ function ProductManagement() {
   }
 
   return (
-    <StoreLayout>
+    <StoreLayout business={store.business}>
       <StoreHeader business={store.business} />
 
       <div className="p-6">
@@ -219,6 +221,16 @@ function ProductManagement() {
           >
             Ver órdenes
           </button>
+        </div>
+
+        <div className="mb-8">
+          <CategoryManager
+            categories={categories}
+            onChange={(updated) => {
+              setCategories(updated);
+              refreshProducts(); // los productos muestran el nombre de su categoría
+            }}
+          />
         </div>
 
         <div className="bg-white rounded-xl shadow p-6 mb-8">
@@ -363,7 +375,7 @@ function ProductManagement() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{product.category_name || "-"}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{product.product_type || "-"}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${product.price}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatPrice(product.price, store.business)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${product.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {product.is_active ? 'Sí' : 'No'}

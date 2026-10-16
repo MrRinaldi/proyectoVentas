@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import MiniCart from "./MiniCart";
+import { getImageUrl } from "../utils/images";
 
 function StoreHeader({ business }) {
   const { selectStore } = useContext(CartContext);
@@ -21,33 +22,49 @@ function StoreHeader({ business }) {
   };
 
   return (
-    <header className="flex justify-between items-center px-6 py-4 bg-white shadow-sm sticky top-0 z-50">
+    <header className="flex flex-wrap justify-between items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-white shadow-sm sticky top-0 z-50 border-t-4 border-[var(--brand)]">
 
-  <h1 className="text-2xl font-bold tracking-tight">
-    {business.name}
-  </h1>
+  <button onClick={() => navigate(`/${slug}`)} className="flex items-center gap-3 min-w-0">
+    {business.logo && (
+      <img
+        src={getImageUrl(business.logo)}
+        alt=""
+        onError={(e) => { e.currentTarget.style.display = "none"; }}
+        className="w-10 h-10 rounded-full object-cover"
+      />
+    )}
+    <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">
+      {business.name}
+    </h1>
+  </button>
 
-  <div className="flex items-center gap-4">
+  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
     {user && isOwner() && (
       <>
         <button
           onClick={() => navigate(`/${slug}/orders`)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          className="bg-blue-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-blue-700 transition"
         >
-          Ver Órdenes
+          Pedidos
         </button>
         <button
           onClick={() => navigate(`/${slug}/products`)}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+          className="bg-green-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-green-700 transition"
         >
-          Administrar Artículos
+          Catálogo
+        </button>
+        <button
+          onClick={() => navigate(`/${slug}/settings`)}
+          className="bg-purple-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-purple-700 transition"
+        >
+          Mi tienda
         </button>
       </>
     )}
 
     {user ? (
       <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-600">
+        <span className="hidden md:inline text-sm text-gray-600">
           {user.email}
         </span>
         <button
@@ -66,7 +83,7 @@ function StoreHeader({ business }) {
       </button>
     )}
 
-    <MiniCart />
+    <MiniCart business={business} />
   </div>
 
 </header>

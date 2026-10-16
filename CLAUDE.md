@@ -46,8 +46,12 @@ Cada fase: cambios mínimos, ampliar `backend/tests/api.test.mjs`, probar en nav
   (`/:slug/settings`, API `/api/businesses/mine`) y "Configurar" en `/admin` (API `PUT /api/admin/businesses/:id`,
   también cambia el tipo) con el mismo `StoreSettingsForm`; `formatPrice` en catálogo, carrito, checkout,
   pedidos, gestión y WhatsApp; color de marca y logo en la cabecera; gestión de categorías (`CategoryManager`).
-- **Fase 9 — Clientes finales:** registro/login por tienda, pedidos vinculados al cliente, "Mis pedidos",
-  y lista de clientes para el administrador de la tienda.
+- **Fase 9 — Clientes finales (hecha):** tabla `customers` (email único por tienda) y `orders.customer_id`
+  (migración 006). API: `POST /api/store/:slug/customers/register|login`, `GET .../customers/me/orders`
+  (`requireCustomer`), `GET /api/customers` (personal). Token de cliente: `role: "customer"`, sin acceso a
+  gestión. El checkout sigue abierto sin cuenta (`optionalAuth`); con sesión, el pedido se vincula.
+  Frontend: `CustomerContext` (sesión por tienda en `customer:<slug>`), páginas `/:slug/cuenta`,
+  `/:slug/mis-pedidos` y `/:slug/clientes`; el acceso del personal sigue en `/login`.
 - **Fase 10 — Tienda configurable por tipo:** una sola página de tienda y una sola tarjeta de producto
   según `businesses.type`; las opciones (p. ej. cantidad de carnes) solo donde correspondan; arreglos de móvil.
 - **Fase 11 — WhatsApp real (anotado para más adelante):** al confirmar el cliente el pedido, aviso a la
@@ -81,7 +85,8 @@ Cada fase: cambios mínimos, ampliar `backend/tests/api.test.mjs`, probar en nav
 
 ## Funcionalidades que no deben romperse
 Listado de tiendas, página pública de tienda y variante burger, carrito y checkout, login de dueños y del
-superadmin, panel `/admin` (crear y suspender tiendas), gestión de productos, gestión de pedidos con cambio de estado.
+superadmin, panel `/admin` (crear y suspender tiendas), gestión de productos, gestión de pedidos con cambio de estado,
+cuenta de cliente por tienda (registro, login, Mis pedidos) y compra sin cuenta, lista de clientes.
 
 ## Metodología de trabajo
 Seguir el flujo: analizar → planificar → implementar lo mínimo → verificar → revisar → documentar.
@@ -98,7 +103,7 @@ Limpieza hecha: `node_modules` y `package.json` de la raíz, componentes y scrip
 Pendientes:
 1. **Antes de salir de local / producción:** el historial de Git conserva el `backend/.env` antiguo;
    cambiar esa contraseña donde se use y no reutilizarla. Pospuesto a propósito mientras se prueba en local.
-2. `npx eslint` marca `react-refresh/only-export-components` en `AuthContext.jsx` y `CartContext.jsx`
+2. `npx eslint` marca `react-refresh/only-export-components` en `AuthContext.jsx`, `CartContext.jsx` y `CustomerContext.jsx`
    (exportan el contexto junto al componente); no afecta al funcionamiento.
 3. La tarjeta normal de producto ofrece "Cantidad de carnes" en todos los productos (fase 10); el backend
    solo la guarda en productos `product_type = 'burger'`.

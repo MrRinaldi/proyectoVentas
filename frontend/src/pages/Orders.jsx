@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { formatPrice } from "../utils/money";
+import { getStatusColor, getStatusText } from "../utils/orderStatus";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import StoreLayout from "../components/StoreLayout";
@@ -87,26 +88,6 @@ function Orders() {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'confirmed': return 'bg-blue-100 text-blue-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'pending': return 'Pendiente';
-      case 'confirmed': return 'Confirmado';
-      case 'delivered': return 'Entregado';
-      case 'cancelled': return 'Cancelado';
-      default: return status;
-    }
-  };
-
   if (!store || loading) return <p className="p-4">Cargando...</p>;
 
   return (
@@ -141,7 +122,14 @@ function Orders() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="font-semibold text-lg">Orden #{order.id}</h3>
-                    <p className="text-gray-600">{order.customer_name}</p>
+                    <p className="text-gray-600">
+                      {order.customer_name}
+                      {order.customer_email && (
+                        <span className="ml-2 text-xs bg-teal-50 text-teal-700 px-2 py-0.5 rounded-full">
+                          Cliente registrado · {order.customer_email}
+                        </span>
+                      )}
+                    </p>
                     <p className="text-gray-600">{order.customer_phone}</p>
                     <p className="text-sm text-gray-500">
                       {new Date(order.created_at).toLocaleString('es-ES')}

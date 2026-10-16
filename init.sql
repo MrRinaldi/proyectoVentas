@@ -34,6 +34,20 @@ CREATE TABLE users (
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
 );
 
+-- Clientes finales: cada uno pertenece a una tienda. El mismo email puede ser cliente de varias
+-- tiendas (cuentas distintas). Separados de `users` (personal) para no mezclar permisos.
+CREATE TABLE customers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    business_id INT NOT NULL,
+    name VARCHAR(150) NOT NULL COLLATE utf8mb4_unicode_ci,
+    email VARCHAR(150) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_customers_business_email (business_id, email),
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+);
+
 CREATE TABLE categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     business_id INT NOT NULL,
@@ -58,9 +72,11 @@ CREATE TABLE products (
 );    
     
     
-    CREATE TABLE orders (
+CREATE TABLE orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     business_id INT NOT NULL,
+    -- Cliente registrado que hizo el pedido; NULL si compró sin cuenta.
+    customer_id INT NULL,
     customer_name VARCHAR(150) NOT NULL COLLATE utf8mb4_unicode_ci,
     customer_phone VARCHAR(20) NOT NULL,
     total DECIMAL(10,2) NOT NULL,
@@ -68,8 +84,8 @@ CREATE TABLE products (
     currency CHAR(3) NOT NULL DEFAULT 'ARS',
     status ENUM('pending','confirmed','delivered','cancelled') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
-
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
+    CONSTRAINT fk_orders_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
 );
 
 CREATE TABLE order_items (

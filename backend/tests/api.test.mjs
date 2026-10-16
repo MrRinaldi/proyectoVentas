@@ -274,6 +274,72 @@ const orphan = (await call("GET", "/api/products", { token })).data.find((p) => 
 check("Borrar categoría deja sus productos sin categoría", r.status === 200 && orphan && orphan.category_id === null, `status ${r.status}, category_id ${orphan?.category_id}`);
 if (orphan) await call("DELETE", `/api/products/${orphan.id}`, { token });
 
+// --- Clientes finales (fase 9). Crea cuentas nuevas en cada ejecución.
+const customerEmail = `cliente${stamp}@prueba.com`;
+const newCustomer = { name: "Cliente Prueba", email: customerEmail, phone: "+54 11 5555-7777", password: "clave-cliente-1" };
+
+r = await call("POST", "/api/store/la-tienda-del-barrio/customers/register", { body: newCustomer });
+const customerToken = r.data?.token;
+check("Cliente se registra en una tienda", r.status === 201 && !!customerToken && r.data.customer?.email === customerEmail, `status ${r.status}`);
+
+r = await call("POST", "/api/store/la-tienda-del-barrio/customers/register", { body: newCustomer });
+check("Email repetido en la misma tienda rechazado", r.status === 409, `status ${r.status}`);
+
+r = await call("POST", "/api/store/comidas-don-jorge/customers/register", { body: { ...newCustomer, password: "otra-clave-22" } });
+const jorgeCustomerToken = r.data?.token;
+check("El mismo email puede ser cliente de otra tienda", r.status === 201, `status ${r.status}`);
+
+r = await call("POST", "/api/store/la-tienda-del-barrio/customers/register", { body: { ...newCustomer, email: `x${stamp}@prueba.com`, password: "corta" } });
+const r3 = await call("POST", "/api/store/la-tienda-del-barrio/customers/register", { body: { ...newCustomer, email: `y${stamp}@prueba.com`, phone: "abc" } });
+check("Registro con contraseña corta o teléfono no válido rechazado", r.status === 400 && r3.status === 400, `${r.status} / ${r3.status}`);
+
+r = await call("POST", "/api/store/la-tienda-del-barrio/customers/login", { body: { email: customerEmail, password: newCustomer.password } });
+const loginOther = await call("POST", "/api/store/la-tienda-del-barrio/customers/login", { body: { email: customerEmail, password: "otra-clave-22" } });
+check("Login de cliente con la contraseña de su tienda (y no la de otra)", r.status === 200 && loginOther.status === 401, `${r.status} / ${loginOther.status}`);
+
+const staffRoutes = [["GET", "/api/products"], ["GET", "/api/categories"], ["GET", "/api/customers"],
+  ["GET", "/api/store/la-tienda-del-barrio/orders"], ["GET", "/api/businesses/mine"], ["GET", "/api/admin/businesses"]];
+const staffStatuses = [];
+for (const [method, path] of staffRoutes) staffStatuses.push((await call(method, path, { token: customerToken })).status);
+check("Un cliente no accede a rutas de gestión ni al panel", staffStatuses.every((s) => s === 403), staffStatuses.join(","));
+
+r = await order("la-tienda-del-barrio", [{ productId: 2, quantity: 3 }], {});
+const guestOrderId = r.data?.order?.id;
+r = await fetch(`${API}/api/store/la-tienda-del-barrio/orders`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json", Authorization: `Bearer ${customerToken}` },
+  body: JSON.stringify({ customerName: "Cliente Prueba", customerPhone: "+54 11 5555-7777", items: [{ productId: 1, quantity: 2 }] }),
+}).then(async (res) => ({ status: res.status, data: await res.json() }));
+const customerOrderId = r.data?.order?.id;
+check("Pedido con sesión de cliente", r.status === 201, `status ${r.status}`);
+
+r = await call("GET", "/api/store/la-tienda-del-barrio/customers/me/orders", { token: customerToken });
+const myIds = (r.data?.orders || []).map((o) => o.id);
+check("Mis pedidos: solo los del cliente", r.status === 200 && myIds.includes(customerOrderId) && !myIds.includes(guestOrderId) && myIds.length === 1,
+  `status ${r.status}, pedidos ${myIds.join(",")}`);
+
+r = await call("GET", "/api/store/comidas-don-jorge/customers/me/orders", { token: customerToken });
+check("Mis pedidos: la sesión de una tienda no sirve en otra", r.status === 403, `status ${r.status}`);
+
+r = await call("GET", "/api/store/comidas-don-jorge/customers/me/orders", { token: jorgeCustomerToken });
+check("Mis pedidos: sin pedidos en la otra tienda", r.status === 200 && r.data.orders.length === 0, `status ${r.status}, ${r.data?.orders?.length}`);
+
+r = await call("GET", "/api/customers", { token });
+const listed = r.data?.customers?.find((c) => c.email === customerEmail);
+check("La tienda ve a su cliente con su número de pedidos", r.status === 200 && listed && listed.order_count === 1, `status ${r.status}, pedidos ${listed?.order_count}`);
+
+r = await call("GET", "/api/customers", { token: jorgeToken });
+const jorgeList = r.data?.customers || [];
+check("Otra tienda no ve los clientes ajenos", r.status === 200 && jorgeList.every((c) => c.id !== listed?.id), `${jorgeList.length} clientes`);
+
+const staffOrder = (await call("GET", "/api/store/la-tienda-del-barrio/orders", { token })).data?.orders.find((o) => o.id === customerOrderId);
+check("Pedidos del personal muestran el cliente registrado", staffOrder?.customer_email === customerEmail, `${staffOrder?.customer_email}`);
+
+r = await call("PATCH", `/api/admin/businesses/${newBusinessId}/status`, { token: superToken, body: { isActive: false } });
+r = await call("POST", `/api/store/${newSlug}/customers/register`, { body: { ...newCustomer, email: `z${stamp}@prueba.com` } });
+await call("PATCH", `/api/admin/businesses/${newBusinessId}/status`, { token: superToken, body: { isActive: true } });
+check("No hay registro de clientes en una tienda suspendida", r.status === 404, `status ${r.status}`);
+
 for (const t of results) console.log(`${t.ok ? "OK   " : "FALLA"} ${t.name}  (${t.detail})`);
 
 const failed = results.filter((t) => !t.ok).length;

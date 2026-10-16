@@ -27,6 +27,7 @@ exports.getOrders = async (req, res) => {
       SELECT
         o.id,
         o.customer_name,
+        (SELECT c.email FROM customers c WHERE c.id = o.customer_id) AS customer_email,
         o.customer_phone,
         o.total,
         o.currency,
@@ -211,6 +212,11 @@ exports.createOrder = async (req, res) => {
 
     const { id: businessId, currency } = businesses[0];
 
+    // Con sesión de cliente de esta tienda, el pedido queda vinculado a su cuenta.
+    const customerId = req.user?.role === "customer" && req.user.businessId === businessId
+      ? req.user.customerId
+      : null;
+
     // Precio y nombre salen de la BD, nunca del cliente. El total se suma en céntimos
     // para evitar errores de redondeo de los decimales (p. ej. 2.9699999999999998).
     let totalCents = 0;
@@ -250,8 +256,8 @@ exports.createOrder = async (req, res) => {
     await connection.beginTransaction();
 
     const [orderResult] = await connection.query(
-      "INSERT INTO orders (business_id, customer_name, customer_phone, total, currency, status) VALUES (?, ?, ?, ?, ?, 'pending')",
-      [businessId, customerName, customerPhone, total, currency]
+      "INSERT INTO orders (business_id, customer_id, customer_name, customer_phone, total, currency, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')",
+      [businessId, customerId, customerName, customerPhone, total, currency]
     );
 
     const orderId = orderResult.insertId;

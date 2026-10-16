@@ -8,6 +8,9 @@ import StoreList from "./pages/StoreList";
 import ProductManagement from "./pages/ProductManagement";
 import AdminPanel from "./pages/AdminPanel";
 import StoreSettings from "./pages/StoreSettings";
+import CustomerAccount from "./pages/CustomerAccount";
+import CustomerOrders from "./pages/CustomerOrders";
+import Customers from "./pages/Customers";
 
 function App() {
   return (
@@ -21,6 +24,9 @@ function App() {
         <Route path="/:slug/orders" element={<Orders />} />
         <Route path="/:slug/products" element={<ProductManagement />} />
         <Route path="/:slug/settings" element={<StoreSettings />} />
+        <Route path="/:slug/clientes" element={<Customers />} />
+        <Route path="/:slug/cuenta" element={<CustomerAccount />} />
+        <Route path="/:slug/mis-pedidos" element={<CustomerOrders />} />
       </Routes>
     </AuthProvider>
   );

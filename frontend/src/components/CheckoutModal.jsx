@@ -1,13 +1,17 @@
 import { useContext, useState } from "react";
 import { formatPrice } from "../utils/money";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
+import { useCustomer } from "../context/CustomerContext";
 
 function CheckoutModal({ isOpen, onClose, business }) {
   const { cart, checkout, total } = useContext(CartContext);
   const { slug } = useParams();
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
+  const { getSession } = useCustomer();
+  // Con sesión de cliente, nombre y teléfono salen de su cuenta y el pedido queda en "Mis pedidos".
+  const session = getSession(slug);
+  const [customerName, setCustomerName] = useState(session?.customer.name || '');
+  const [customerPhone, setCustomerPhone] = useState(session?.customer.phone || '');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -17,15 +21,15 @@ function CheckoutModal({ isOpen, onClose, business }) {
     setError('');
     setLoading(true);
 
-    const result = await checkout(slug, customerName, customerPhone);
+    const result = await checkout(slug, customerName, customerPhone, session?.token);
 
     if (result.success) {
       setSuccess(true);
       setTimeout(() => {
         onClose();
         setSuccess(false);
-        setCustomerName('');
-        setCustomerPhone('');
+        setCustomerName(session?.customer.name || '');
+        setCustomerPhone(session?.customer.phone || '');
       }, 3000);
     } else {
       setError(result.error);
@@ -48,6 +52,7 @@ function CheckoutModal({ isOpen, onClose, business }) {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">¡Pedido realizado!</h3>
             <p className="text-gray-600">Tu pedido ha sido enviado correctamente. El vendedor te contactará pronto.</p>
+            {session && <p className="text-gray-600 mt-2 text-sm">Puedes seguirlo en "Mis pedidos".</p>}
           </div>
         ) : (
           <>
@@ -69,6 +74,13 @@ function CheckoutModal({ isOpen, onClose, business }) {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {session ? (
+                <p className="text-sm text-gray-600">Comprando como <strong>{session.customer.email}</strong>.</p>
+              ) : (
+                <p className="text-sm text-gray-600">
+                  Puedes comprar sin cuenta o <Link to={`/${slug}/cuenta`} className="text-blue-600 underline">entrar</Link> para guardar tus pedidos.
+                </p>
+              )}
               {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm">
                   {error}

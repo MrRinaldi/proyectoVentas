@@ -97,7 +97,8 @@ export function CartProvider({ children }) {
     setCart([]);
   };
 
-  const checkout = async (slug, customerName, customerPhone) => {
+  // customerToken (opcional): sesión de cliente de esta tienda, para vincular el pedido a su cuenta.
+  const checkout = async (slug, customerName, customerPhone, customerToken = null) => {
     try {
       const items = cart.map(item => ({
         productId: item.id,
@@ -109,6 +110,7 @@ export function CartProvider({ children }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(customerToken ? { Authorization: `Bearer ${customerToken}` } : {}),
         },
         body: JSON.stringify({
           customerName,

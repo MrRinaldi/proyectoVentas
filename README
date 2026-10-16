@@ -34,6 +34,7 @@ Get-Content scripts/migrations/002-image-paths.sql | docker exec -i mysql_db mys
 Get-Content scripts/migrations/003-order-items-history.sql | docker exec -i mysql_db mysql -uroot -proot ventas
 Get-Content scripts/migrations/004-superadmin-and-store-status.sql | docker exec -i mysql_db mysql -uroot -proot ventas
 Get-Content scripts/migrations/005-store-currency.sql | docker exec -i mysql_db mysql -uroot -proot ventas
+Get-Content scripts/migrations/006-customers.sql | docker exec -i mysql_db mysql -uroot -proot ventas
 ```
 
 ### Superadministrador

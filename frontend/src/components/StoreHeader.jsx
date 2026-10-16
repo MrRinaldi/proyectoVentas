@@ -2,14 +2,17 @@ import { useContext, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useCustomer } from "../context/CustomerContext";
 import MiniCart from "./MiniCart";
 import { getImageUrl } from "../utils/images";
 
 function StoreHeader({ business }) {
   const { selectStore } = useContext(CartContext);
   const { user, isOwner, logout } = useAuth();
+  const { getSession, clearSession } = useCustomer();
   const { slug } = useParams();
   const navigate = useNavigate();
+  const customerSession = getSession(slug);
 
   // Todas las páginas de una tienda muestran esta cabecera: aquí se carga el carrito de esa tienda.
   useEffect(() => {
@@ -54,6 +57,12 @@ function StoreHeader({ business }) {
           Catálogo
         </button>
         <button
+          onClick={() => navigate(`/${slug}/clientes`)}
+          className="bg-teal-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-teal-700 transition"
+        >
+          Clientes
+        </button>
+        <button
           onClick={() => navigate(`/${slug}/settings`)}
           className="bg-purple-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-purple-700 transition"
         >
@@ -63,6 +72,7 @@ function StoreHeader({ business }) {
     )}
 
     {user ? (
+      // Sesión del personal (o del superadmin).
       <div className="flex items-center gap-2">
         <span className="hidden md:inline text-sm text-gray-600">
           {user.email}
@@ -74,12 +84,31 @@ function StoreHeader({ business }) {
           Salir
         </button>
       </div>
+    ) : customerSession ? (
+      // Cliente con cuenta en esta tienda.
+      <div className="flex items-center gap-2">
+        <span className="hidden md:inline text-sm text-gray-600">
+          {customerSession.customer.name}
+        </span>
+        <button
+          onClick={() => navigate(`/${slug}/mis-pedidos`)}
+          className="bg-[var(--brand)] text-white px-3 py-2 rounded hover:opacity-90 transition text-sm"
+        >
+          Mis pedidos
+        </button>
+        <button
+          onClick={() => clearSession(slug)}
+          className="bg-gray-600 text-white px-3 py-2 rounded hover:bg-gray-700 transition text-sm"
+        >
+          Salir
+        </button>
+      </div>
     ) : (
       <button
-        onClick={() => navigate('/login')}
+        onClick={() => navigate(`/${slug}/cuenta`)}
         className="bg-gray-600 text-white px-3 py-2 rounded hover:bg-gray-700 transition text-sm"
       >
-        Iniciar Sesión
+        Entrar
       </button>
     )}
 

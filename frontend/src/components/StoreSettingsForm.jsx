@@ -10,6 +10,20 @@ const CURRENCIES = Intl.supportedValuesOf("currency")
   .sort((a, b) => a.name.localeCompare(b.name, "es"));
 
 // Formatos de número más habituales. El backend acepta cualquier código válido.
+// Zonas horarias más habituales (las estadísticas cuentan los días en la zona de la tienda).
+// El backend acepta cualquier zona IANA válida.
+const TIMEZONES = {
+  "America/Argentina/Buenos_Aires": "Argentina (Buenos Aires)",
+  "America/Santiago": "Chile (Santiago)",
+  "America/Bogota": "Colombia (Bogotá)",
+  "America/Mexico_City": "México (Ciudad de México)",
+  "America/Lima": "Perú (Lima)",
+  "America/Montevideo": "Uruguay (Montevideo)",
+  "America/Sao_Paulo": "Brasil (São Paulo)",
+  "America/New_York": "Estados Unidos (Nueva York)",
+  "Europe/Madrid": "España (Madrid)",
+};
+
 const LOCALES = {
   "es-AR": "Español (Argentina)",
   "es-CL": "Español (Chile)",
@@ -36,6 +50,7 @@ function StoreSettingsForm({ business, showType = false, onSave, onCancel }) {
     phone: business.phone || "",
     currency: business.currency || "ARS",
     locale: business.locale || "es-AR",
+    timezone: business.timezone || "America/Argentina/Buenos_Aires",
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null); // { type: "ok" | "error", text }
@@ -58,6 +73,7 @@ function StoreSettingsForm({ business, showType = false, onSave, onCancel }) {
 
   const inputClass = "mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm";
   const locales = LOCALES[form.locale] ? LOCALES : { ...LOCALES, [form.locale]: form.locale };
+  const timezones = TIMEZONES[form.timezone] ? TIMEZONES : { ...TIMEZONES, [form.timezone]: form.timezone };
 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -97,6 +113,15 @@ function StoreSettingsForm({ business, showType = false, onSave, onCancel }) {
         Formato de números y fechas
         <select name="locale" value={form.locale} onChange={handleChange} className={inputClass}>
           {Object.entries(locales).map(([value, label]) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
+      </label>
+
+      <label className="text-sm font-medium text-gray-700">
+        Zona horaria (para contar las ventas por día)
+        <select name="timezone" value={form.timezone} onChange={handleChange} className={inputClass}>
+          {Object.entries(timezones).map(([value, label]) => (
             <option key={value} value={value}>{label}</option>
           ))}
         </select>

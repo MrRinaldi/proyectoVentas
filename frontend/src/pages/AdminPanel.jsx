@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import StoreSettingsForm from "../components/StoreSettingsForm";
+import ThemeToggle from "../components/ThemeToggle";
 import { STORE_TYPES, getStoreType } from "../config/catalog";
 
 const API = `${import.meta.env.VITE_API_URL}/api/admin`;
@@ -121,6 +122,7 @@ function AdminPanel() {
         <h1 className="text-lg sm:text-xl font-bold">Panel de la plataforma</h1>
         <div className="flex items-center gap-3">
           <span className="hidden sm:inline text-sm text-gray-600">{user?.email}</span>
+          <ThemeToggle />
           <button onClick={handleLogout} className="bg-gray-700 text-white text-sm px-3 py-1.5 rounded">
             Salir
           </button>

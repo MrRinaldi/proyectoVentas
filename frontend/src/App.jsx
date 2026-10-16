@@ -10,6 +10,7 @@ import StoreSettings from "./pages/StoreSettings";
 import CustomerAccount from "./pages/CustomerAccount";
 import CustomerOrders from "./pages/CustomerOrders";
 import Customers from "./pages/Customers";
+import StoreStats from "./pages/StoreStats";
 
 // Enlaces antiguos a /:slug/burger: ahora todas las tiendas usan la misma página.
 function RedirectToStore() {
@@ -30,6 +31,7 @@ function App() {
         <Route path="/:slug/products" element={<ProductManagement />} />
         <Route path="/:slug/settings" element={<StoreSettings />} />
         <Route path="/:slug/clientes" element={<Customers />} />
+        <Route path="/:slug/estadisticas" element={<StoreStats />} />
         <Route path="/:slug/cuenta" element={<CustomerAccount />} />
         <Route path="/:slug/mis-pedidos" element={<CustomerOrders />} />
       </Routes>

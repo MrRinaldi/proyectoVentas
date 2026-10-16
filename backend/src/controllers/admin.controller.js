@@ -50,7 +50,7 @@ exports.listBusinesses = async (req, res) => {
     const [businesses] = await pool.query(`
       SELECT
         b.id, b.name, b.slug, b.type, b.logo, b.primary_color, b.whatsapp_number, b.phone,
-        b.currency, b.locale, b.is_active, b.created_at,
+        b.currency, b.locale, b.timezone, b.is_active, b.created_at,
         (SELECT u.email FROM users u WHERE u.business_id = b.id AND u.role = 'owner' ORDER BY u.id LIMIT 1) AS owner_email,
         (SELECT COUNT(*) FROM products p WHERE p.business_id = b.id) AS product_count,
         (SELECT COUNT(*) FROM orders o WHERE o.business_id = b.id) AS order_count
@@ -131,10 +131,10 @@ exports.updateBusiness = async (req, res) => {
 
     const [result] = await pool.query(
       `UPDATE businesses
-       SET name = ?, type = ?, logo = ?, primary_color = ?, whatsapp_number = ?, phone = ?, currency = ?, locale = ?
+       SET name = ?, type = ?, logo = ?, primary_color = ?, whatsapp_number = ?, phone = ?, currency = ?, locale = ?, timezone = ?
        WHERE id = ?`,
       [settings.name, settings.type, settings.logo, settings.primary_color, settings.whatsapp_number,
-        settings.phone, settings.currency, settings.locale, req.params.id]
+        settings.phone, settings.currency, settings.locale, settings.timezone, req.params.id]
     );
 
     if (result.affectedRows === 0) {

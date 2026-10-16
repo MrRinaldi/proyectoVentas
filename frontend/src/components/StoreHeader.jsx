@@ -4,6 +4,7 @@ import { CartContext } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useCustomer } from "../context/CustomerContext";
 import MiniCart from "./MiniCart";
+import ThemeToggle from "./ThemeToggle";
 import { getImageUrl } from "../utils/images";
 
 function StoreHeader({ business }) {
@@ -44,6 +45,12 @@ function StoreHeader({ business }) {
   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
     {user && isOwner() && (
       <>
+        <button
+          onClick={() => navigate(`/${slug}/estadisticas`)}
+          className="bg-indigo-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-indigo-700 transition"
+        >
+          Estadísticas
+        </button>
         <button
           onClick={() => navigate(`/${slug}/orders`)}
           className="bg-blue-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-blue-700 transition"
@@ -112,6 +119,7 @@ function StoreHeader({ business }) {
       </button>
     )}
 
+    <ThemeToggle />
     <MiniCart business={business} />
   </div>
 

@@ -1,3 +1,60 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+  Modo oscuro (clase "dark" en <html>, la pone src/utils/theme.js).
+  En lugar de añadir variantes dark: a cada componente, aquí se reasignan los pocos colores neutros
+  que usa la app (fondos blancos/grises, textos grises, bordes y formularios). Así cualquier pantalla,
+  también las nuevas, se adapta sola si usa estas clases. Los colores de marca (--brand) y de estado
+  (verde, rojo, amarillo...) no cambian.
+  Escala usada (grises de Tailwind): 900 #111827, 800 #1f2937, 700 #374151, 600 #4b5563.
+*/
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #111827;
+  color: #f3f4f6;
+}
+
+/* Superficies */
+.dark .bg-white { background-color: #1f2937; }
+.dark .bg-gray-50 { background-color: #111827; }
+.dark .bg-gray-100,
+.dark .hover\:bg-gray-100:hover { background-color: #374151; }
+.dark .bg-gray-300 { background-color: #4b5563; }
+
+/* Textos */
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .hover\:text-gray-900:hover { color: #f9fafb; }
+.dark .text-gray-700 { color: #e5e7eb; }
+.dark .text-gray-600 { color: #d1d5db; }
+.dark .text-gray-500 { color: #9ca3af; }
+.dark .text-gray-400 { color: #6b7280; }
+
+/* Bordes: :where() no suma especificidad, así los bordes de color (marca, estados) siguen ganando. */
+:where(.dark) *,
+:where(.dark) ::before,
+:where(.dark) ::after { border-color: #374151; }
+.dark .border-gray-300 { border-color: #4b5563; }
+.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+/* Formularios */
+.dark input:not([type="radio"]):not([type="checkbox"]):not([type="color"]),
+.dark select,
+.dark textarea {
+  background-color: #111827;
+  color: #f3f4f6;
+}
+
+/* La imagen de reserva (recuadro gris claro) se oscurece para no deslumbrar. */
+.dark img[src$="/images/placeholder.svg"] {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9);
+}
+
+/* Color de las series de los gráficos (paleta validada para contraste en claro y oscuro). */
+:root { --chart-series-1: #2a78d6; }
+html.dark { --chart-series-1: #3987e5; }

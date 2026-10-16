@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ThemeToggle from "../components/ThemeToggle";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { getImageUrl, showPlaceholderOnError } from "../utils/images";
@@ -31,7 +32,8 @@ function StoreList() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
+      <ThemeToggle className="absolute top-4 right-4" />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold text-center mb-8">
           Tiendas Disponibles

@@ -2,7 +2,7 @@ const pool = require("../config/db");
 const { parseBusinessSettings } = require("../utils/businessSettings");
 
 // Campos de configuración que ve el administrador de la tienda (y el superadmin).
-const SETTINGS_COLUMNS = "id, name, slug, type, logo, primary_color, whatsapp_number, phone, currency, locale";
+const SETTINGS_COLUMNS = "id, name, slug, type, logo, primary_color, whatsapp_number, phone, currency, locale, timezone";
 
 exports.getBusinesses = async (req, res) => {
   try {
@@ -41,10 +41,10 @@ exports.updateMyBusiness = async (req, res) => {
 
     await pool.query(
       `UPDATE businesses
-       SET name = ?, logo = ?, primary_color = ?, whatsapp_number = ?, phone = ?, currency = ?, locale = ?
+       SET name = ?, logo = ?, primary_color = ?, whatsapp_number = ?, phone = ?, currency = ?, locale = ?, timezone = ?
        WHERE id = ?`,
       [settings.name, settings.logo, settings.primary_color, settings.whatsapp_number, settings.phone,
-        settings.currency, settings.locale, req.user.businessId]
+        settings.currency, settings.locale, settings.timezone, req.user.businessId]
     );
 
     res.json({ message: "Configuración guardada" });

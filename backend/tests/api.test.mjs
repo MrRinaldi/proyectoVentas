@@ -219,7 +219,7 @@ check("Mi tienda: el administrador ve su configuración", !!original?.currency &
 // Valores tal como los envía el formulario (camelCase).
 const settingsOf = (b) => ({
   name: b.name, logo: b.logo, primaryColor: b.primary_color, whatsappNumber: b.whatsapp_number,
-  phone: b.phone, currency: b.currency, locale: b.locale, type: b.type,
+  phone: b.phone, currency: b.currency, locale: b.locale, timezone: b.timezone, type: b.type,
 });
 
 r = await call("PUT", "/api/businesses/mine", { token, body: { ...settingsOf(original), currency: "USD", locale: "en-US", primaryColor: "#123456", type: "perfumery" } });
@@ -339,6 +339,55 @@ r = await call("PATCH", `/api/admin/businesses/${newBusinessId}/status`, { token
 r = await call("POST", `/api/store/${newSlug}/customers/register`, { body: { ...newCustomer, email: `z${stamp}@prueba.com` } });
 await call("PATCH", `/api/admin/businesses/${newBusinessId}/status`, { token: superToken, body: { isActive: true } });
 check("No hay registro de clientes en una tienda suspendida", r.status === 404, `status ${r.status}`);
+
+// --- Estadísticas de la tienda
+r = await call("GET", "/api/stats", { token });
+const statsBefore = r.data;
+check("Estadísticas: 30 días por defecto", r.status === 200 && statsBefore.days === 30 && statsBefore.daily.length === 30, `status ${r.status}, ${statsBefore?.daily?.length} días`);
+
+r = await call("GET", "/api/stats?days=7", { token });
+const r9 = await call("GET", "/api/stats?days=999", { token });
+check("Estadísticas: períodos 7 días y valor no permitido -> 30", r.data?.daily?.length === 7 && r9.data?.days === 30, `${r.data?.daily?.length} / ${r9.data?.days}`);
+
+const statsStatuses = [
+  (await call("GET", "/api/stats")).status,
+  (await call("GET", "/api/stats", { token: customerToken })).status,
+  (await call("GET", "/api/stats", { token: superToken })).status,
+];
+check("Estadísticas: solo el personal de la tienda", statsStatuses.join(",") === "401,403,403", statsStatuses.join(","));
+
+const priceOf = async (id) => Number((await call("GET", `/api/store/la-tienda-del-barrio`)).data.products.find((p) => p.id === id).price);
+const p5 = await priceOf(5);
+const o1 = (await order("la-tienda-del-barrio", [{ productId: 5, quantity: 2 }])).data.order.id;
+const o2 = (await order("la-tienda-del-barrio", [{ productId: 5, quantity: 1 }])).data.order.id;
+let statsAfter = (await call("GET", "/api/stats", { token })).data;
+const expectedRevenue = Math.round((statsBefore.summary.revenue + p5 * 3) * 100) / 100;
+check("Estadísticas: suman los pedidos nuevos", statsAfter.summary.orders === statsBefore.summary.orders + 2 && statsAfter.summary.revenue === expectedRevenue,
+  `pedidos ${statsBefore.summary.orders}->${statsAfter.summary.orders}, ventas ${statsBefore.summary.revenue}->${statsAfter.summary.revenue} (esperado ${expectedRevenue})`);
+check("Estadísticas: el último día incluye los pedidos de hoy", statsAfter.daily.at(-1).orders >= 2, `hoy: ${statsAfter.daily.at(-1).orders} pedidos`);
+check("Estadísticas: productos más vendidos", statsAfter.topProducts.some((p) => p.name === "Queso Manchego"), statsAfter.topProducts.map((p) => p.name).join(", "));
+
+await call("PUT", `/api/store/la-tienda-del-barrio/orders/${o2}/status`, { token, body: { status: "cancelled" } });
+const cancelled = (await call("GET", "/api/stats", { token })).data;
+check("Estadísticas: los pedidos cancelados no suman ventas", cancelled.summary.orders === statsAfter.summary.orders - 1 && cancelled.byStatus.cancelled === statsAfter.byStatus.cancelled + 1,
+  `pedidos ${cancelled.summary.orders}, cancelados ${cancelled.byStatus.cancelled}`);
+
+const jorgeStats = (await call("GET", "/api/stats", { token: jorgeToken })).data;
+check("Estadísticas: cada tienda ve solo lo suyo", !jorgeStats.topProducts.some((p) => p.name === "Queso Manchego"), jorgeStats.topProducts.map((p) => p.name).join(", "));
+
+// Zona horaria: con UTC+14 (Kiritimati) "hoy" es distinto que en UTC−10 (Honolulu) durante gran parte del día.
+const mine = (await call("GET", "/api/businesses/mine", { token })).data.business;
+const localToday = (tz) => new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+const lastDays = [];
+for (const tz of ["Pacific/Kiritimati", "Pacific/Honolulu"]) {
+  await call("PUT", "/api/businesses/mine", { token, body: { ...settingsOf(mine), timezone: tz } });
+  lastDays.push([(await call("GET", "/api/stats?days=7", { token })).data.daily.at(-1).day, localToday(tz)]);
+}
+r = await call("PUT", "/api/businesses/mine", { token, body: { ...settingsOf(mine), timezone: "Marte/Olympus" } });
+await call("PUT", "/api/businesses/mine", { token, body: settingsOf(mine) });
+check("Estadísticas: 'hoy' según la zona horaria de la tienda", lastDays.every(([api, expected]) => api === expected), JSON.stringify(lastDays));
+check("Mi tienda: zona horaria no válida rechazada", r.status === 400, `status ${r.status}`);
+void o1;
 
 for (const t of results) console.log(`${t.ok ? "OK   " : "FALLA"} ${t.name}  (${t.detail})`);
 

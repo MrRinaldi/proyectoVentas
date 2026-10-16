@@ -18,6 +18,8 @@ CREATE TABLE businesses (
     -- Moneda (código ISO 4217) e idioma/región (BCP 47) con los que la tienda muestra los importes.
     currency CHAR(3) NOT NULL DEFAULT 'ARS',
     locale VARCHAR(20) NOT NULL DEFAULT 'es-AR',
+    -- Zona horaria (IANA) para agrupar ventas por día en las estadísticas.
+    timezone VARCHAR(50) NOT NULL DEFAULT 'America/Argentina/Buenos_Aires',
     -- FALSE = tienda suspendida por el superadministrador: no se muestra ni acepta pedidos.
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -114,8 +116,8 @@ INSERT INTO businesses (name, slug, type, logo, primary_color, whatsapp_number, 
 ('Comidas Rápidas Don Jorge', 'comidas-don-jorge', 'food', '/api/images/don-jorge-logo.png', '#4ECDC4', '+34612345679', '+34612345679'),
 ('Perfumería Elegancia', 'perfumeria-elegancia', 'perfumery', '/api/images/elegancia-logo.png', '#95E1D3', '+34612345680', '+34612345680');
 -- Monedas de ejemplo (por defecto ARS / es-AR).
-UPDATE businesses SET currency = 'EUR', locale = 'es-ES' WHERE slug IN ('la-tienda-del-barrio', 'comidas-don-jorge');
-UPDATE businesses SET currency = 'USD', locale = 'en-US' WHERE slug = 'perfumeria-elegancia';
+UPDATE businesses SET currency = 'EUR', locale = 'es-ES', timezone = 'Europe/Madrid' WHERE slug IN ('la-tienda-del-barrio', 'comidas-don-jorge');
+UPDATE businesses SET currency = 'USD', locale = 'en-US', timezone = 'America/New_York' WHERE slug = 'perfumeria-elegancia';
 
 -- =====================================
 -- TABLA: usuarios

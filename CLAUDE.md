@@ -57,11 +57,12 @@ Cada fase: cambios mínimos, ampliar `backend/tests/api.test.mjs`, probar en nav
   `Store.jsx` (pestañas o lista lateral) y una sola `ProductCard.jsx` (opciones solo si el tipo de producto
   las tiene). Eliminados `StoreBurger`, `BurgerProductCard`, `BurgerProductList`, `BurgerCategoryTabs`;
   `/:slug/burger` redirige a `/:slug`. Tienda inexistente muestra un mensaje.
-- **Fase 11 — WhatsApp real (anotado para más adelante):** al confirmar el cliente el pedido, aviso a la
+- **Modo oscuro y estadísticas (hechos, fuera de la numeración):** ver "Modo oscuro" y "Estadísticas" abajo.
+- **Fase 11 — WhatsApp real (pospuesta por el usuario):** al confirmar el cliente el pedido, aviso a la
   tienda y confirmación al cliente con artículos, cantidades y total en su moneda; tabla de notificaciones
   con estado de envío visible en el panel; número receptor configurable por tienda; API de WhatsApp
   Business u otro proveedor compatible.
-- **Fase 12 — Producción:** docker-compose de producción, secretos, CORS, límite de intentos de login y de
+- **Fase 12 — Producción (pospuesta por el usuario):** docker-compose de producción, secretos, CORS, límite de intentos de login y de
   pedidos, esquema separado de los datos de ejemplo, script del primer superadmin, cambio de la contraseña antigua.
 
 ## Tecnologías
@@ -89,7 +90,8 @@ Cada fase: cambios mínimos, ampliar `backend/tests/api.test.mjs`, probar en nav
 ## Funcionalidades que no deben romperse
 Listado de tiendas, página pública de tienda (pestañas o lista lateral según el tipo), carrito y checkout, login de dueños y del
 superadmin, panel `/admin` (crear y suspender tiendas), gestión de productos, gestión de pedidos con cambio de estado,
-cuenta de cliente por tienda (registro, login, Mis pedidos) y compra sin cuenta, lista de clientes.
+cuenta de cliente por tienda (registro, login, Mis pedidos) y compra sin cuenta, lista de clientes,
+estadísticas de la tienda, modo oscuro.
 
 ## Metodología de trabajo
 Seguir el flujo: analizar → planificar → implementar lo mínimo → verificar → revisar → documentar.
@@ -128,6 +130,22 @@ El carrito es por tienda: `StoreHeader` llama a `selectStore(slug)` y `CartConte
   (`currency`, `locale`) llega como prop `business` desde la página; un pedido usa su propia `currency`.
 - Color de marca: `StoreLayout` define `--brand` con `businesses.primary_color`; usar `bg-[var(--brand)]`,
   `text-[var(--brand)]`, etc.
+
+## Modo oscuro
+- Clase `dark` en `<html>`: la aplica `index.html` antes de cargar (preferencia guardada o la del sistema)
+  y la cambia `ThemeToggle` (`src/utils/theme.js`, clave `theme` en localStorage).
+- `src/index.css` reasigna en oscuro los colores neutros que usa la app (`bg-white`, `bg-gray-50/100/300`,
+  `text-gray-400…900`, bordes, formularios). Usar esos colores neutros en componentes nuevos y se
+  adaptan solos; para otro color neutro, añadir su regla allí (o usar `dark:` de Tailwind, `darkMode: "class"`).
+
+## Estadísticas
+- `GET /api/stats?days=7|30|90` (personal de la tienda), página `/:slug/estadisticas` (portada del dueño tras el login).
+- Los días se cuentan en `businesses.timezone` (IANA, migración 007, editable en "Mi tienda"); el
+  agrupado por día se hace en `stats.controller.js` con `Intl`.
+- Solo suman pedidos no cancelados en la moneda actual de la tienda; los de otra moneda se avisan aparte.
+- Gráficos: color `--chart-series-1` (claro `#2a78d6`, oscuro `#3987e5`, validados con la guía dataviz),
+  no el color de marca (que elige la tienda y puede no contrastar). Siempre con detalle al pasar el ratón
+  y versión en tabla.
 
 ## Pruebas
 `backend/tests/api.test.mjs` (sin dependencias): con `docker compose up -d`, ejecutar `npm test` en `backend/`.

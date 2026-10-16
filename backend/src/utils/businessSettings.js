@@ -17,13 +17,23 @@ function canonicalLocale(locale) {
   }
 }
 
+// Zona horaria IANA válida (p. ej. "America/Argentina/Buenos_Aires").
+function isValidTimezone(timezone) {
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: timezone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // Texto opcional: "" o ausente -> null.
 const optionalText = (value) => (typeof value === "string" && value.trim() ? value.trim() : null);
 
 // Devuelve { error } si algo no es válido, o { settings } con los campos ya normalizados.
 // allowType: solo el superadministrador puede cambiar el tipo de tienda.
 function parseBusinessSettings(body, { allowType = false } = {}) {
-  const { name, logo, primaryColor, whatsappNumber, phone, currency, locale, type } = body || {};
+  const { name, logo, primaryColor, whatsappNumber, phone, currency, locale, timezone, type } = body || {};
 
   if (typeof name !== "string" || name.trim().length < 2 || name.trim().length > 150) {
     return { error: "El nombre de la tienda debe tener entre 2 y 150 caracteres" };
@@ -37,6 +47,7 @@ function parseBusinessSettings(body, { allowType = false } = {}) {
     phone: optionalText(phone),
     currency: typeof currency === "string" ? currency.trim().toUpperCase() : "",
     locale: typeof locale === "string" ? canonicalLocale(locale.trim()) : null,
+    timezone: typeof timezone === "string" ? timezone.trim() : "",
   };
 
   if (settings.logo && (settings.logo.length > 255 || !LOGO_PATTERN.test(settings.logo))) {
@@ -55,6 +66,9 @@ function parseBusinessSettings(body, { allowType = false } = {}) {
   }
   if (!settings.locale || settings.locale.length > 20) {
     return { error: "Idioma/región no válido (por ejemplo es-AR)" };
+  }
+  if (!settings.timezone || settings.timezone.length > 50 || !isValidTimezone(settings.timezone)) {
+    return { error: "Zona horaria no válida (por ejemplo America/Argentina/Buenos_Aires)" };
   }
 
   if (allowType) {
